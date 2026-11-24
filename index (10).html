@@ -1,0 +1,3584 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>에코픽 (ECO PICK) — 분리배출 & 주변 수거 장소 안내</title>
+    <meta
+      name="description"
+      content="스마트폰 카메라와 위치 센서를 활용해 쓰레기 분리배출 방법, 빈용기 보증금 정보, 주변 수거 장소와 구글 지도 길찾기를 안내하는 반응형 웹 앱입니다."
+    />
+    <meta property="og:title" content="에코픽 (ECO PICK) — 분리배출 & 주변 수거 장소 안내" />
+    <meta
+      property="og:description"
+      content="쓰레기를 촬영하고 올바르게 분리배출해 보세요. 보상 정보 확인과 주변 수거 장소 길찾기까지 한 번에 안내합니다."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#1B6B48" />
+    <style>
+      :root {
+        --bg: #f7f6f2;
+        --surface: #ffffff;
+        --surface-muted: #efece4;
+        --surface-soft: #faf9f5;
+        --border: #e3dfd3;
+        --border-strong: #d4cfc2;
+        --ink: #18261e;
+        --ink-muted: #536358;
+        --ink-subtle: #6e7d72;
+        --accent: #1b6b48;
+        --accent-hover: #145337;
+        --accent-tint: #e7f2ec;
+        --accent-tint-hover: #dcece3;
+        --warn-bg: #fffbeb;
+        --warn-border: #fde68a;
+        --warn-ink: #78350f;
+        --amber: #b45309;
+        --teal: #0f766e;
+        --blue: #1d4ed8;
+        --font-sans: "Apple SD Gothic Neo", "Pretendard Variable", "Malgun Gothic", "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-mono: "SF Mono", "Consolas", "Liberation Mono", ui-monospace, monospace;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-sans);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input {
+        font-family: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .mono-num {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Top Header — 3-zone contract */
+      .top-header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .top-header-inner {
+        max-width: 1152px;
+        margin: 0 auto;
+        height: 58px;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+      }
+
+      .brand-btn {
+        background: none;
+        border: none;
+        padding: 4px 2px;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .desktop-nav {
+        display: none;
+        align-items: center;
+        gap: 28px;
+      }
+
+      .nav-link {
+        background: none;
+        border: none;
+        padding: 6px 2px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-bottom: 2px solid transparent;
+        transition: color 0.16s ease, border-color 0.16s ease;
+      }
+
+      .nav-link:hover {
+        color: var(--ink);
+      }
+
+      .nav-link.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+
+      .header-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 40px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        border: none;
+        background: var(--accent);
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.16s ease, transform 0.12s ease;
+      }
+
+      .header-cta:hover {
+        background: var(--accent-hover);
+      }
+
+      .header-cta:active {
+        transform: scale(0.98);
+      }
+
+      /* Mobile Bottom Thumb Bar (<= 15% viewport height, >= 44px touch targets) */
+      .mobile-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 45;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid var(--border);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
+      .mobile-bottom-grid {
+        max-width: 640px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        height: 62px;
+      }
+
+      .mobile-tab-btn {
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        min-height: 44px;
+        padding: 4px 2px;
+        color: var(--ink-muted);
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .mobile-tab-btn.active {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      /* Page Layout */
+      .app-main {
+        max-width: 1152px;
+        margin: 0 auto;
+        padding: 20px 16px 92px;
+      }
+
+      .app-footer {
+        max-width: 1152px;
+        margin: 12px auto 0;
+        padding: 20px 16px 96px;
+        border-top: 1px solid var(--border);
+        font-size: 12px;
+        color: var(--ink-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      /* Cards & Surfaces */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 22px;
+      }
+
+      .card-muted {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 20px;
+      }
+
+      .kicker-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink-muted);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        align-items: stretch;
+      }
+
+      .hero-title {
+        margin: 14px 0 0;
+        font-size: clamp(1.75rem, 3.6vw, 2.55rem);
+        font-weight: 800;
+        line-height: 1.24;
+        letter-spacing: -0.025em;
+        color: var(--ink);
+        text-wrap: balance;
+      }
+
+      .hero-desc {
+        margin: 14px 0 0;
+        max-width: 56ch;
+        font-size: 15px;
+        line-height: 1.65;
+        color: var(--ink-muted);
+      }
+
+      .cta-row {
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* Buttons */
+      .btn-primary {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 52px;
+        padding: 12px 24px;
+        border-radius: 16px;
+        border: none;
+        background: var(--accent);
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        cursor: pointer;
+        transition: background-color 0.16s ease, transform 0.12s ease;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+
+      .btn-primary:active {
+        transform: scale(0.985);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 52px;
+        padding: 12px 20px;
+        border-radius: 16px;
+        border: 1px solid var(--border-strong);
+        background: var(--surface-muted);
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        cursor: pointer;
+        transition: background-color 0.16s ease;
+      }
+
+      .btn-secondary:hover {
+        background: #e5e0d4;
+      }
+
+      .btn-soft {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 50px;
+        padding: 10px 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(27, 107, 72, 0.35);
+        background: var(--accent-tint);
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        cursor: pointer;
+        transition: background-color 0.16s ease;
+      }
+
+      .btn-soft:hover {
+        background: var(--accent-tint-hover);
+      }
+
+      .btn-outline {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 44px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border-strong);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .btn-outline:hover {
+        background: var(--surface-soft);
+      }
+
+      .sr-only-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Hero Visual Panel (inline SVG, zero external images) */
+      .hero-visual {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 250px;
+      }
+
+      .hero-svg-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px 18px 8px;
+      }
+
+      .hero-visual-caption {
+        padding: 16px 20px;
+        background: #18261e;
+        color: #ffffff;
+      }
+
+      .hero-visual-caption small {
+        display: block;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .hero-visual-caption p {
+        margin: 4px 0 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      /* Menu Grid */
+      .menu-grid {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .menu-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 128px;
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        text-align: left;
+        transition: border-color 0.16s ease, background-color 0.16s ease;
+      }
+
+      .menu-card:hover {
+        border-color: rgba(27, 107, 72, 0.45);
+        background: var(--surface-soft);
+      }
+
+      .icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--accent-tint);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .menu-card h2 {
+        margin: 14px 0 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .menu-card p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: var(--ink-muted);
+      }
+
+      /* Notice Banners */
+      .notice-warn {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--warn-border);
+        background: var(--warn-bg);
+        color: var(--warn-ink);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .notice-info {
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        color: var(--ink-muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      /* Camera Viewfinder */
+      .viewfinder-shell {
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        background: #18261e;
+      }
+
+      .video-stage {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #0c120e;
+      }
+
+      .video-stage video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .reticle-frame {
+        position: absolute;
+        inset: 22px;
+        border: 2px dashed rgba(255, 255, 255, 0.55);
+        border-radius: 16px;
+        pointer-events: none;
+      }
+
+      .video-hint {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 14px;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .video-hint span {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.62);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .viewfinder-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 20px;
+        background: #18261e;
+      }
+
+      .preview-stage {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: var(--surface-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .preview-stage img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      /* Camera Sensor Panel */
+      .sensor-active-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #102419;
+        color: #ecfdf5;
+        font-size: 12px;
+        font-weight: 700;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .sensor-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .sensor-pulse {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: #34d399;
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.28);
+        flex-shrink: 0;
+      }
+
+      .sensor-panel {
+        padding: 12px 16px;
+        background: #132018;
+        color: #e2ece6;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .sensor-panel-light {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        color: var(--ink);
+      }
+
+      .sensor-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      @media (min-width: 640px) {
+        .sensor-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .sensor-cell {
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .sensor-panel-light .sensor-cell {
+        background: var(--surface);
+        border-color: var(--border);
+      }
+
+      .sensor-cell small {
+        display: block;
+        font-size: 11px;
+        color: rgba(236, 253, 245, 0.72);
+      }
+
+      .sensor-panel-light .sensor-cell small {
+        color: var(--ink-muted);
+      }
+
+      .sensor-cell strong {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Category Chips & Manual Grid */
+      .cat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .cat-btn {
+        min-height: 62px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--surface-soft);
+        text-align: left;
+        transition: border-color 0.15s ease, background-color 0.15s ease;
+      }
+
+      .cat-btn:hover,
+      .cat-btn.active {
+        border-color: var(--accent);
+        background: var(--accent-tint);
+      }
+
+      .cat-btn strong {
+        display: block;
+        font-size: 14px;
+        color: var(--ink);
+      }
+
+      .cat-btn span {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--ink-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Result Layout */
+      .split-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .step-list {
+        list-style: none;
+        padding: 0;
+        margin: 16px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--surface-soft);
+      }
+
+      .step-num {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .check-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-height: 44px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-soft);
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .check-item input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: var(--accent);
+        flex-shrink: 0;
+      }
+
+      /* Segmented Tabs */
+      .tab-strip {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .seg-btn {
+        min-height: 44px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--ink-muted);
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .seg-btn.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #ffffff;
+      }
+
+      /* Search Input */
+      .search-form {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .text-input {
+        min-height: 46px;
+        flex: 1;
+        min-width: 0;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border-strong);
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-size: 14px;
+      }
+
+      /* Interactive In-File Radar/Coordinate Map */
+      .map-board-wrap {
+        position: relative;
+        background: #eef2ec;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        overflow: hidden;
+      }
+
+      .map-svg {
+        display: block;
+        width: 100%;
+        height: 360px;
+        touch-action: manipulation;
+      }
+
+      .map-zoom-controls {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .map-zoom-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-strong);
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .map-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        padding: 10px 16px;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 12px;
+        color: var(--ink-muted);
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend-swatch {
+        width: 11px;
+        height: 11px;
+        border-radius: 999px;
+        display: inline-block;
+      }
+
+      .places-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .place-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .place-card.selected {
+        border-color: var(--accent);
+        background: rgba(231, 242, 236, 0.45);
+      }
+
+      /* Rewards Calculator */
+      .tier-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .tier-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--surface-soft);
+      }
+
+      .qty-ctrl {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .qty-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-strong);
+        background: var(--surface);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      @media (min-width: 640px) {
+        .app-main {
+          padding: 32px 24px 96px;
+        }
+        .cta-row {
+          flex-direction: row;
+          align-items: center;
+        }
+        .menu-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .cat-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+        .places-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .tier-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .app-footer {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          padding: 24px 24px 96px;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .desktop-nav {
+          display: flex;
+        }
+        .mobile-bottom-nav {
+          display: none;
+        }
+        .app-main {
+          padding-bottom: 48px;
+        }
+        .app-footer {
+          padding-bottom: 36px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .hero-grid {
+          grid-template-columns: 7fr 5fr;
+          gap: 32px;
+        }
+        .split-layout {
+          grid-template-columns: 7fr 5fr;
+          gap: 24px;
+        }
+        .split-layout-map {
+          display: grid;
+          grid-template-columns: 8fr 4fr;
+          gap: 20px;
+        }
+        .places-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Bar (3-zone contract) -->
+    <header class="top-header">
+      <div class="top-header-inner">
+        <button type="button" class="brand-btn" data-nav="home">에코픽 ECO PICK</button>
+
+        <nav class="desktop-nav" aria-label="주 메뉴">
+          <button type="button" class="nav-link active" data-nav="home">홈</button>
+          <button type="button" class="nav-link" data-nav="guide">분리배출 방법</button>
+          <button type="button" class="nav-link" data-nav="map">주변 수거 장소</button>
+          <button type="button" class="nav-link" data-nav="rewards">보상 정보</button>
+        </nav>
+
+        <button type="button" class="header-cta" data-nav="camera">쓰레기 촬영하기</button>
+      </div>
+    </header>
+
+    <!-- Mobile Thumb-Zone Bottom Tab Bar -->
+    <nav class="mobile-bottom-nav" aria-label="하단 탭 메뉴">
+      <div class="mobile-bottom-grid">
+        <button type="button" class="mobile-tab-btn active" data-nav="home">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+          </svg>
+          <span>홈</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-nav="camera">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          <span>촬영</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-nav="guide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+          <span>배출법</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-nav="map">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <span>수거장소</span>
+        </button>
+        <button type="button" class="mobile-tab-btn" data-nav="rewards">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v10M9 10h6M9 14h6" />
+          </svg>
+          <span>보상</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="app-main">
+      <!-- 1. HOME SCREEN -->
+      <section id="screen-home">
+        <div class="hero-grid">
+          <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;padding:28px;">
+            <div>
+              <div class="kicker-line">
+                <span>ECO PICK</span>
+                <span aria-hidden="true">·</span>
+                <span>스마트폰 센서 기반 분리배출 도우미</span>
+              </div>
+              <h1 class="hero-title">쓰레기를 촬영하고 올바르게 분리배출해 보세요!</h1>
+              <p class="hero-desc">
+                스마트폰 후면 카메라로 쓰레기를 촬영하면 사진 분석과 상태 확인을 거쳐 단계별 분리배출 방법을 안내합니다.
+                빈용기 보증금 환불 여부와 GPS 기반 주변 수거 장소 길찾기까지 한 곳에서 확인하세요.
+              </p>
+            </div>
+
+            <div class="cta-row">
+              <button type="button" class="btn-primary" style="flex:1;" data-nav="camera">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                <span>쓰레기 촬영하기</span>
+              </button>
+
+              <label class="btn-secondary">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B6B48" stroke-width="2.2" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>사진 업로드</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="home-upload-input"
+                  aria-label="사진 업로드"
+                  class="sr-only-input"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="hero-svg-wrap">
+              <!-- Pure inline SVG illustration (zero external images) -->
+              <svg viewBox="0 0 360 220" width="100%" height="190" role="img" aria-label="투명 페트병, 알루미늄 캔, 유리병, 종이 분리배출 일러스트">
+                <rect x="14" y="18" width="332" height="184" rx="20" fill="#FFFFFF" stroke="#E3DFD3" />
+                <!-- Transparent PET -->
+                <g transform="translate(36, 46)">
+                  <rect x="14" y="4" width="18" height="10" rx="3" fill="#1B6B48" />
+                  <path d="M12 18 C12 14, 34 14, 34 18 L40 46 L40 124 C40 130, 6 130, 6 124 L6 46 Z" fill="#E7F2EC" stroke="#1B6B48" stroke-width="2" />
+                  <rect x="8" y="64" width="30" height="24" rx="4" fill="#FFFFFF" stroke="#1B6B48" stroke-dasharray="3 2" />
+                  <text x="23" y="148" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">투명 페트</text>
+                </g>
+                <!-- Aluminum Can -->
+                <g transform="translate(114, 62)">
+                  <rect x="6" y="12" width="40" height="102" rx="10" fill="#EFECE4" stroke="#536358" stroke-width="2" />
+                  <ellipse cx="26" cy="12" rx="20" ry="5" fill="#FFFFFF" stroke="#536358" stroke-width="2" />
+                  <path d="M18 52 L26 42 L34 52 M18 68 L26 78 L34 68" fill="none" stroke="#1B6B48" stroke-width="2" stroke-linecap="round" />
+                  <text x="26" y="132" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">캔류</text>
+                </g>
+                <!-- Deposit Bottle -->
+                <g transform="translate(190, 42)">
+                  <rect x="17" y="4" width="16" height="8" rx="2" fill="#B45309" />
+                  <path d="M18 12 L32 12 L35 50 L44 68 L44 128 C44 134, 6 134, 6 128 L6 68 L15 50 Z" fill="#FEF3C7" stroke="#B45309" stroke-width="2" />
+                  <circle cx="25" cy="94" r="11" fill="#FFFFFF" stroke="#B45309" stroke-width="1.5" />
+                  <text x="25" y="98" text-anchor="middle" font-size="10" font-weight="700" fill="#B45309">₩</text>
+                  <text x="25" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">공병 보증</text>
+                </g>
+                <!-- Paper Box -->
+                <g transform="translate(264, 72)">
+                  <rect x="4" y="22" width="54" height="82" rx="6" fill="#FAF9F5" stroke="#536358" stroke-width="2" />
+                  <path d="M4 38 L58 38" stroke="#536358" stroke-width="1.5" />
+                  <rect x="20" y="54" width="22" height="14" rx="2" fill="#E7F2EC" stroke="#1B6B48" stroke-width="1.5" />
+                  <text x="31" y="122" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">종이류</text>
+                </g>
+              </svg>
+            </div>
+            <div class="hero-visual-caption">
+              <small>자원순환 4원칙</small>
+              <p>내용물 비우기 · 이물질 헹구기 · 라벨·뚜껑 분리 · 전용함 배출</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Core Menus -->
+        <div class="menu-grid" aria-label="주요 기능 메뉴">
+          <button type="button" class="menu-card" data-nav="guide">
+            <span class="icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+            </span>
+            <div>
+              <h2>분리배출 방법</h2>
+              <p>플라스틱·유리·캔·종이별 세척 및 라벨·뚜껑 제거 기준 안내</p>
+            </div>
+          </button>
+
+          <button type="button" class="menu-card" data-nav="map">
+            <span class="icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            </span>
+            <div>
+              <h2>주변 수거 장소</h2>
+              <p>GPS 시작 버튼으로 내 위치 확인 후 수거함·공병 반환 매장 검색</p>
+            </div>
+          </button>
+
+          <button type="button" class="menu-card" data-nav="rewards">
+            <span class="icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v10M9 10h6M9 14h6" />
+              </svg>
+            </span>
+            <div>
+              <h2>보상 정보</h2>
+              <p>확인된 빈용기보증금(70원~350원) 및 조건부 수거 제도 확인</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- Privacy & Optional Local History -->
+        <div class="card-muted" style="margin-top:24px;">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+            <div style="max-width:640px;">
+              <h2 style="margin:0;font-size:14px;font-weight:700;">개인정보 보호 및 기기 내 기록 설정</h2>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--ink-muted);line-height:1.6;">
+                촬영한 사진과 위치 정보는 사용자의 동의 없이 저장되거나 외부로 전송되지 않습니다.
+                최근 확인 내역만 브라우저 저장소(localStorage)에 선택적으로 보관할 수 있습니다.
+              </p>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <label style="display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:13px;font-weight:600;cursor:pointer;">
+                <input type="checkbox" id="toggle-history" style="width:18px;height:18px;accent-color:var(--accent);" />
+                <span>최근 기록 기기 저장</span>
+              </label>
+              <button type="button" id="btn-clear-history" class="btn-outline hidden">기록 삭제</button>
+            </div>
+          </div>
+          <div id="home-history-list" class="places-grid hidden" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-strong);"></div>
+        </div>
+      </section>
+
+      <!-- 2. CAMERA SCREEN -->
+      <section id="screen-camera" class="hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+          <div>
+            <h1 style="margin:0;font-size:22px;font-weight:800;">쓰레기 촬영 및 분석</h1>
+            <p style="margin:4px 0 0;font-size:13px;color:var(--ink-muted);">
+              시작 버튼을 눌러 카메라 권한을 요청하거나, 기본 카메라·사진 업로드를 바로 이용할 수 있습니다.
+            </p>
+          </div>
+          <button type="button" id="btn-camera-cancel" class="btn-outline">취소</button>
+        </div>
+
+        <!-- Step 1: Consent & Explicit Start Button (NEVER auto-fires on mount) -->
+        <div id="cam-state-consent" class="card">
+          <div class="icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <polyline points="9 12 11 14 15 10" />
+            </svg>
+          </div>
+          <h2 style="margin:14px 0 0;font-size:18px;font-weight:700;">카메라 센서 시작 및 권한 요청</h2>
+          <p style="margin:8px 0 0;font-size:14px;color:var(--ink-muted);line-height:1.6;">
+            스마트폰 후면 카메라로 쓰레기를 촬영하려면 아래 시작 버튼을 눌러 카메라 사용 권한을 허용해 주세요.
+            미리보기 창에서 권한 팝업이 차단되는 경우 새 탭에서 열거나 <strong>기본 카메라로 촬영</strong>을 바로 이용할 수 있습니다.
+          </p>
+
+          <div id="cam-perm-notice" class="notice-warn hidden" style="margin-top:14px;flex-direction:column;gap:8px;">
+            <span id="cam-perm-notice-text"></span>
+            <a href="?tab=camera" target="_blank" rel="noopener noreferrer" class="btn-outline" style="align-self:flex-start;">새 탭에서 열어 카메라 권한 허용하기</a>
+          </div>
+
+          <div id="cam-consent-sensor-box" class="sensor-panel-light">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+              <strong style="font-size:12px;">카메라 센서 연결 준비 정보</strong>
+              <span id="cam-consent-sensor-badge" style="font-size:11px;font-weight:700;color:var(--accent);">대기 중</span>
+            </div>
+            <div class="sensor-grid">
+              <div class="sensor-cell">
+                <small>사용 센서</small>
+                <strong>후면 카메라 (MediaDevices)</strong>
+              </div>
+              <div class="sensor-cell">
+                <small>카메라 권한 상태</small>
+                <strong id="cam-consent-perm-state">확인 중</strong>
+              </div>
+              <div class="sensor-cell">
+                <small>연결 환경</small>
+                <strong id="cam-consent-sec-state">보안 확인 중</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button type="button" id="btn-start-camera" class="btn-primary" style="flex:1;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span>카메라 시작 (권한 요청)</span>
+            </button>
+
+            <label class="btn-soft">
+              <span>기본 카메라로 촬영 (권한 팝업 불필요)</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                id="cam-native-input-1"
+                aria-label="기본 카메라로 촬영"
+                class="sr-only-input"
+              />
+            </label>
+
+            <label class="btn-secondary">
+              <span>사진 업로드</span>
+              <input
+                type="file"
+                accept="image/*"
+                id="cam-upload-input-1"
+                aria-label="사진 업로드"
+                class="sr-only-input"
+              />
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 2: Live Camera Viewfinder -->
+        <div id="cam-state-live" class="viewfinder-shell hidden">
+          <div class="sensor-active-bar">
+            <span class="sensor-live-badge">
+              <span class="sensor-pulse" aria-hidden="true"></span>
+              <span id="cam-live-status-text">카메라 센서 작동 중 · 실시간 스트림 연결됨</span>
+            </span>
+            <span id="cam-live-lens-badge" class="mono-num" style="font-size:11px;opacity:0.9;">후면 카메라</span>
+          </div>
+          <div class="video-stage">
+            <video id="camera-video" autoplay playsinline muted></video>
+            <div class="reticle-frame" aria-hidden="true"></div>
+            <div class="video-hint">
+              <span id="camera-live-hint">쓰레기 전체가 사각형 중앙에 보이도록 맞춰 주세요</span>
+            </div>
+          </div>
+          <div class="sensor-panel">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <strong style="font-size:12px;color:#ffffff;">실시간 카메라 센서 데이터</strong>
+              <span id="cam-sensor-device-name" style="font-size:11px;color:rgba(236,253,245,0.78);max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">장치 확인 중</span>
+            </div>
+            <div class="sensor-grid">
+              <div class="sensor-cell">
+                <small>센서 해상도</small>
+                <strong id="sensor-live-res">-</strong>
+              </div>
+              <div class="sensor-cell">
+                <small>렌즈 방향 · FPS</small>
+                <strong id="sensor-live-fps">-</strong>
+              </div>
+              <div class="sensor-cell">
+                <small>실시간 평균 밝기</small>
+                <strong id="sensor-live-brightness">측정 중</strong>
+              </div>
+              <div class="sensor-cell">
+                <small>윤곽 선명도 지수</small>
+                <strong id="sensor-live-sharpness">측정 중</strong>
+              </div>
+              <div class="sensor-cell">
+                <small>색상 평균 (RGB)</small>
+                <strong id="sensor-live-rgb">-</strong>
+              </div>
+              <div class="sensor-cell">
+                <small>촬영 권장 상태</small>
+                <strong id="sensor-live-ready">영상 대기</strong>
+              </div>
+            </div>
+          </div>
+          <div class="viewfinder-bar">
+            <label class="btn-outline" style="background:transparent;color:#fff;border-color:rgba(255,255,255,0.28);">
+              <span>사진 업로드</span>
+              <input
+                type="file"
+                accept="image/*"
+                id="cam-upload-input-2"
+                aria-label="사진 업로드"
+                class="sr-only-input"
+              />
+            </label>
+
+            <button type="button" id="btn-capture-photo" class="btn-primary" style="min-height:52px;padding:12px 28px;">
+              촬영하기
+            </button>
+
+            <button type="button" id="btn-stop-camera" class="btn-outline" style="background:transparent;color:#fff;border-color:rgba(255,255,255,0.28);">
+              중지
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3: Camera Unavailable / Denied Fallback -->
+        <div id="cam-state-unavailable" class="card hidden">
+          <div class="notice-warn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div>
+              <strong>웹 카메라를 바로 사용할 수 없습니다</strong>
+              <p id="cam-error-text" style="margin:4px 0 0;"></p>
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <label class="btn-primary" style="flex:1;">
+              <span>기본 카메라로 바로 촬영</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                id="cam-native-input-2"
+                aria-label="기본 카메라로 바로 촬영"
+                class="sr-only-input"
+              />
+            </label>
+
+            <label class="btn-secondary" style="flex:1;">
+              <span>사진 파일 업로드</span>
+              <input
+                type="file"
+                accept="image/*"
+                id="cam-upload-input-3"
+                aria-label="사진 파일 업로드"
+                class="sr-only-input"
+              />
+            </label>
+
+            <button type="button" id="btn-retry-camera" class="btn-outline" style="min-height:52px;">
+              권한 다시 요청
+            </button>
+          </div>
+
+          <div id="cam-iframe-tip" class="notice-info hidden" style="margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
+            <span>미리보기 창 정책으로 권한이 제한된 경우 새 브라우저 탭에서 열어 보세요.</span>
+            <a id="cam-new-tab-link" href="?tab=camera" target="_blank" rel="noopener noreferrer" style="font-weight:700;color:var(--accent);">새 탭에서 열기</a>
+          </div>
+        </div>
+
+        <!-- Step 4: Photo Preview -->
+        <div id="cam-state-preview" class="card hidden" style="padding:0;overflow:hidden;">
+          <div class="preview-stage">
+            <img id="captured-preview-img" alt="촬영 또는 업로드한 쓰레기 사진 미리보기" />
+          </div>
+          <div style="padding:20px;">
+            <div id="preview-sensor-summary" class="sensor-panel-light hidden" style="margin-top:0;margin-bottom:14px;"></div>
+            <div id="cam-analyze-error" class="notice-warn hidden" style="margin-bottom:14px;"></div>
+            <div class="cta-row" style="margin-top:0;">
+              <button type="button" id="btn-analyze-photo" class="btn-primary" style="flex:1;">
+                AI 사진 분석 및 분리배출 확인하기
+              </button>
+              <button type="button" id="btn-retake-photo" class="btn-secondary">
+                다시 촬영하기
+              </button>
+              <label class="btn-outline" style="min-height:52px;">
+                <span>다른 사진 업로드</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="cam-upload-input-4"
+                  aria-label="다른 사진 업로드"
+                  class="sr-only-input"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <canvas id="capture-canvas" class="hidden" aria-hidden="true"></canvas>
+
+        <!-- Manual Category Selection Always Available -->
+        <div class="card" style="margin-top:20px;">
+          <h2 style="margin:0;font-size:15px;font-weight:700;">품목을 직접 선택해 분리배출 방법 보기</h2>
+          <p style="margin:4px 0 14px;font-size:12px;color:var(--ink-muted);">
+            카메라 없이도 아래 쓰레기 종류를 선택하면 즉시 상세 안내와 수거 장소를 확인할 수 있습니다.
+          </p>
+          <div id="camera-manual-grid" class="cat-grid"></div>
+        </div>
+      </section>
+
+      <!-- 3. ANALYSIS RESULT & DISPOSAL GUIDE SCREEN -->
+      <section id="screen-result" class="hidden">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;">
+          <div>
+            <div class="kicker-line" id="result-kicker"></div>
+            <h1 id="result-title" style="margin:6px 0 0;font-size:26px;font-weight:800;"></h1>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" id="btn-result-retake" class="btn-outline">다시 촬영하기</button>
+            <button type="button" id="btn-result-home" class="btn-outline">메인 화면으로</button>
+          </div>
+        </div>
+
+        <div id="result-uncertain-banner" class="notice-warn" style="margin-bottom:18px;"></div>
+
+        <div class="split-layout">
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <!-- Photo & Camera Sensor Summary -->
+            <div id="result-photo-card" class="card hidden" style="padding:16px;">
+              <div class="preview-stage" style="border-radius:14px;max-height:260px;">
+                <img id="result-photo-img" alt="분석 대상 쓰레기 사진" />
+              </div>
+              <p id="result-visual-note" style="margin:12px 0 0;font-size:13px;color:var(--ink-muted);"></p>
+              <div id="result-sensor-summary" class="sensor-panel-light hidden"></div>
+            </div>
+
+            <!-- Interactive Category Override -->
+            <div class="card">
+              <h2 style="margin:0;font-size:15px;font-weight:700;">인식 품목 확인 및 변경</h2>
+              <p style="margin:4px 0 12px;font-size:12px;color:var(--ink-muted);">
+                실제 쓰레기와 다르면 아래에서 알맞은 품목을 직접 눌러 안내를 바로 전환하세요.
+              </p>
+              <div id="result-category-switcher" class="cat-grid"></div>
+            </div>
+
+            <!-- Contamination Self-Check -->
+            <div class="card">
+              <h2 style="margin:0;font-size:15px;font-weight:700;">오염 상태 직접 확인</h2>
+              <p style="margin:4px 0 12px;font-size:12px;color:var(--ink-muted);">
+                사진만으로 오염 여부를 확정할 수 없으므로 현재 상태를 선택해 주세요.
+              </p>
+              <div class="tab-strip" id="result-condition-tabs">
+                <button type="button" class="seg-btn" data-cond="clean">깨끗함 (내용물 비움)</button>
+                <button type="button" class="seg-btn" data-cond="contaminated">음식물·이물질 묻음</button>
+                <button type="button" class="seg-btn" data-cond="unknown">확인 필요</button>
+              </div>
+              <div id="result-condition-advice" class="notice-info" style="margin-top:12px;"></div>
+            </div>
+
+            <!-- Step-by-Step Disposal Guide -->
+            <div class="card">
+              <h2 style="margin:0;font-size:17px;font-weight:700;">단계별 분리배출 방법</h2>
+              <div id="result-prep-checklist" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+              <ol id="result-steps-list" class="step-list"></ol>
+              <div id="result-local-rule" class="notice-warn" style="margin-top:16px;"></div>
+            </div>
+          </div>
+
+          <!-- Right Column: Reward & Nearby Collection Link -->
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div class="card">
+              <span style="font-size:12px;font-weight:700;color:var(--accent);">보상 및 수거 구분</span>
+              <h2 id="result-reward-title" style="margin:6px 0 0;font-size:20px;font-weight:800;"></h2>
+              <p id="result-reward-summary" style="margin:10px 0 0;font-size:14px;color:var(--ink-muted);line-height:1.6;"></p>
+
+              <div id="result-deposit-tiers" class="hidden" style="margin-top:14px;padding:14px;border-radius:16px;background:var(--surface-soft);border:1px solid var(--border);font-size:13px;">
+                <strong style="display:block;margin-bottom:8px;">확인된 대한민국 빈용기보증금 (환경부)</strong>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>190mL 미만</span><span class="mono-num"><strong>70원</strong></span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>190mL ~ 400mL 미만 (소주병 등)</span><span class="mono-num"><strong>100원</strong></span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>400mL ~ 1,000mL 미만 (맥주병 등)</span><span class="mono-num"><strong>130원</strong></span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>1,000mL 이상 대형병</span><span class="mono-num"><strong>350원</strong></span></div>
+              </div>
+
+              <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px;">
+                <button type="button" id="btn-result-find-places" class="btn-primary" style="width:100%;">
+                  주변 수거 장소 찾기
+                </button>
+                <button type="button" id="btn-result-open-rewards" class="btn-secondary" style="width:100%;">
+                  보상 기준 자세히 보기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. MAP & NEARBY COLLECTION SCREEN -->
+      <section id="screen-map" class="hidden">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;">
+          <div>
+            <h1 style="margin:0;font-size:24px;font-weight:800;">주변 수거 장소 및 길찾기</h1>
+            <p style="margin:6px 0 0;font-size:14px;color:var(--ink-muted);">
+              시작 버튼을 눌러 GPS 위치를 확인하거나 지역명을 입력하면 주변 수거 장소와 구글 지도 길찾기를 안내합니다.
+            </p>
+          </div>
+          <a id="btn-google-search-top" href="https://www.google.com/maps/search/?api=1&query=%EC%9E%AC%ED%99%9C%EC%9A%A9+%EC%88%98%EA%B1%B0%ED%95%A8" target="_blank" rel="noopener noreferrer" class="btn-outline">
+            구글 지도에서 주변 검색
+          </a>
+        </div>
+
+        <!-- Location Start Bar -->
+        <div class="card" style="margin-top:18px;">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+            <div>
+              <strong id="map-location-label" style="font-size:14px;display:block;">위치 권한 및 지역 설정</strong>
+              <span style="font-size:12px;color:var(--ink-muted);">
+                위치 정보는 수거 장소 검색에만 즉시 사용되며 동의 없이 저장·전송되지 않습니다.
+              </span>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:8px;flex:1;justify-content:flex-end;">
+              <button type="button" id="btn-gps-top" class="btn-primary" style="min-height:46px;padding:10px 16px;font-size:14px;">
+                내 현재 위치로 검색 시작 (GPS)
+              </button>
+              <form id="form-region-top" class="search-form" style="max-width:340px;">
+                <input
+                  type="text"
+                  id="input-region-top"
+                  class="text-input"
+                  placeholder="지역명 입력 (예: 강남역, 홍대)"
+                  aria-label="지역명 입력"
+                />
+                <button type="submit" class="btn-secondary" style="min-height:46px;padding:10px 16px;">검색</button>
+              </form>
+            </div>
+          </div>
+
+          <div id="map-error-box" class="notice-warn hidden" style="margin-top:14px;"></div>
+          <div id="map-geocode-choices" class="hidden" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="tab-strip" id="map-filter-tabs" style="margin-top:16px;">
+          <button type="button" class="seg-btn active" data-map-filter="all">전체 수거·반환 장소</button>
+          <button type="button" class="seg-btn" data-map-filter="deposit_bottle">공병 반환 (소매점)</button>
+          <button type="button" class="seg-btn" data-map-filter="can_pet">캔·페트·수거함</button>
+          <button type="button" class="seg-btn" data-map-filter="recycling_center">재활용 센터·거점</button>
+        </div>
+
+        <!-- Initial Start Card (before location is selected) -->
+        <div id="map-empty-start" class="card" style="margin-top:16px;text-align:center;padding:32px 20px;">
+          <div class="icon-box" style="margin:0 auto;width:54px;height:54px;border-radius:16px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </div>
+          <h2 style="margin:16px 0 0;font-size:18px;font-weight:700;">위치 권한 요청 후 주변 수거 장소를 찾습니다</h2>
+          <p style="margin:8px auto 0;max-width:480px;font-size:14px;color:var(--ink-muted);line-height:1.6;">
+            아래 시작 버튼을 누르면 스마트폰 GPS 위치 권한을 요청합니다. 미리보기 창에서 권한이 차단된 경우 새 탭에서 열거나 네트워크 위치·지역명으로 검색할 수 있습니다.
+          </p>
+
+          <div id="map-perm-notice" class="notice-warn hidden" style="margin:14px auto 0;max-width:520px;text-align:left;"></div>
+
+          <div style="margin-top:20px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;">
+            <button type="button" id="btn-gps-center" class="btn-primary">
+              내 현재 위치로 검색 시작 (GPS 권한 요청)
+            </button>
+            <button type="button" id="btn-ip-location" class="btn-soft">
+              네트워크 위치로 바로 찾기
+            </button>
+            <a id="map-new-tab-link" href="?tab=map" target="_blank" rel="noopener noreferrer" class="btn-secondary hidden">
+              새 탭에서 열어 GPS 허용
+            </a>
+          </div>
+
+          <div style="margin:24px auto 0;max-width:480px;padding-top:20px;border-top:1px solid var(--border);">
+            <p style="margin:0 0 10px;font-size:12px;color:var(--ink-muted);font-weight:600;">
+              위치 권한 없이 지역명으로 직접 검색하기:
+            </p>
+            <form id="form-region-center" class="search-form">
+              <input
+                type="text"
+                id="input-region-center"
+                class="text-input"
+                placeholder="시·구·동 또는 지하철역 (예: 강남역, 부산 서면)"
+                aria-label="지역명 직접 검색"
+              />
+              <button type="submit" class="btn-primary" style="min-height:46px;padding:10px 18px;">지역 검색</button>
+            </form>
+            <div style="margin-top:12px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">
+              <button type="button" class="btn-outline preset-region" data-region="강남역">강남역</button>
+              <button type="button" class="btn-outline preset-region" data-region="서울시청">서울시청</button>
+              <button type="button" class="btn-outline preset-region" data-region="홍대입구역">홍대입구역</button>
+              <button type="button" class="btn-outline preset-region" data-region="부산 서면">부산 서면</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Map + Selected Place + List -->
+        <div id="map-active-view" class="hidden" style="margin-top:16px;">
+          <div class="split-layout-map">
+            <div class="map-board-wrap">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);">
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="seg-btn active" id="btn-view-google-map" style="min-height:36px;padding:6px 12px;font-size:12px;">구글 지도 보기</button>
+                  <button type="button" class="seg-btn" id="btn-view-radar-map" style="min-height:36px;padding:6px 12px;font-size:12px;">수거 장소 핀 레이더</button>
+                </div>
+                <a id="btn-open-gmap-full" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" style="font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;">
+                  구글 지도 크게 열기 ↗
+                </a>
+              </div>
+
+              <!-- Live Embedded Google Maps (Strictly Verified Collection/Bottle-Return Places Only) -->
+              <div id="google-map-pane">
+                <iframe
+                  id="google-map-iframe"
+                  title="구글 지도 검증된 수거·공병 반환 장소 위치"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  style="width:100%;height:360px;border:0;display:block;background:#eef2ec;"
+                ></iframe>
+                <div id="google-map-status-bar" style="padding:8px 14px;background:var(--accent-tint);border-top:1px solid var(--border);font-size:12px;color:var(--ink);font-weight:600;">
+                  선별된 수거·공병 반환 장소 핀을 불러오고 있습니다...
+                </div>
+              </div>
+
+              <!-- Interactive SVG Coordinate Map with all Pins -->
+              <div id="radar-map-pane" class="hidden" style="position:relative;">
+                <svg id="interactive-map-svg" class="map-svg" viewBox="0 0 640 380" role="img" aria-label="기준 위치 중심 주변 수거 장소 지도"></svg>
+                <div class="map-zoom-controls">
+                  <button type="button" id="btn-map-zoom-in" class="map-zoom-btn" aria-label="지도 확대">+</button>
+                  <button type="button" id="btn-map-zoom-out" class="map-zoom-btn" aria-label="지도 축소">−</button>
+                </div>
+              </div>
+
+              <div class="map-legend">
+                <span class="legend-item"><span class="legend-swatch" style="background:var(--blue);"></span>기준 위치</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:var(--amber);"></span>공병 반환 가능(소매점)</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:var(--accent);"></span>재활용 수거함·센터</span>
+              </div>
+            </div>
+
+            <div class="card" id="selected-place-panel" style="display:flex;flex-direction:column;justify-content:space-between;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-muted);">
+                  <span id="sel-place-cat">장소 선택 대기</span>
+                  <span id="sel-place-dist" class="mono-num" style="font-weight:700;color:var(--accent);"></span>
+                </div>
+                <h2 id="sel-place-name" style="margin:8px 0 0;font-size:19px;font-weight:800;">지도의 마커나 목록을 선택하세요</h2>
+                <dl style="margin:14px 0 0;font-size:13px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--surface-muted);padding-top:12px;">
+                  <div>
+                    <dt style="font-size:11px;color:var(--ink-muted);">주소</dt>
+                    <dd id="sel-place-addr" style="margin:2px 0 0;font-weight:600;">-</dd>
+                  </div>
+                  <div>
+                    <dt style="font-size:11px;color:var(--ink-muted);">운영 정보</dt>
+                    <dd id="sel-place-hours" style="margin:2px 0 0;font-weight:600;">-</dd>
+                  </div>
+                  <div>
+                    <dt style="font-size:11px;color:var(--ink-muted);">취급 품목</dt>
+                    <dd id="sel-place-mat" style="margin:2px 0 0;">-</dd>
+                  </div>
+                </dl>
+                <div id="sel-place-reward" class="notice-info" style="margin-top:12px;font-size:12px;"></div>
+              </div>
+
+              <a id="btn-sel-directions" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary hidden" style="margin-top:16px;width:100%;">
+                구글 지도로 길찾기
+              </a>
+            </div>
+          </div>
+
+          <div style="margin-top:22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <h2 style="margin:0;font-size:16px;font-weight:700;">
+                확인된 수거 장소 <span id="places-count" class="mono-num" style="color:var(--accent);">0</span>곳
+              </h2>
+              <span style="font-size:12px;color:var(--ink-muted);">OpenStreetMap 실시간 조회</span>
+            </div>
+            <div id="places-status-box" class="card hidden" style="text-align:center;"></div>
+            <div id="places-list" class="places-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. REWARDS SCREEN -->
+      <section id="screen-rewards" class="hidden">
+        <div class="hero-grid">
+          <div class="card">
+            <div class="kicker-line">
+              <span>자원순환보증금 제도</span>
+              <span aria-hidden="true">·</span>
+              <span>확인된 법정 금액 기준</span>
+            </div>
+            <h1 style="margin:10px 0 0;font-size:26px;font-weight:800;">보상 가능한 쓰레기와 환급 기준</h1>
+            <p style="margin:10px 0 0;font-size:14px;color:var(--ink-muted);line-height:1.65;">
+              에코픽은 실제로 확인된 대한민국 빈용기보증금 금액만 안내하며, 지자체나 무인회수기별로 운영 기준이 다른 포인트 제도는 확인되지 않은 금액을 임의로 표시하지 않습니다.
+            </p>
+            <div style="margin-top:18px;">
+              <button type="button" id="btn-rewards-find-map" class="btn-primary">
+                주변 공병 반환 마트·슈퍼 찾기
+              </button>
+            </div>
+          </div>
+
+          <div class="card-muted" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
+            <!-- Pure SVG Bottle Deposit Diagram -->
+            <svg viewBox="0 0 280 150" width="100%" height="145" role="img" aria-label="빈용기보증금 규격별 안내">
+              <rect x="8" y="8" width="264" height="134" rx="16" fill="#FFFFFF" stroke="#E3DFD3" />
+              <g transform="translate(26, 28)">
+                <rect x="10" y="34" width="22" height="50" rx="5" fill="#FEF3C7" stroke="#B45309" stroke-width="1.8" />
+                <text x="21" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">70원</text>
+              </g>
+              <g transform="translate(86, 24)">
+                <rect x="10" y="24" width="26" height="64" rx="6" fill="#E7F2EC" stroke="#1B6B48" stroke-width="1.8" />
+                <text x="23" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">100원</text>
+              </g>
+              <g transform="translate(148, 20)">
+                <rect x="10" y="16" width="28" height="76" rx="7" fill="#FEF3C7" stroke="#B45309" stroke-width="1.8" />
+                <text x="24" y="110" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">130원</text>
+              </g>
+              <g transform="translate(210, 14)">
+                <rect x="8" y="8" width="34" height="90" rx="8" fill="#E7F2EC" stroke="#1B6B48" stroke-width="1.8" />
+                <text x="25" y="116" text-anchor="middle" font-size="11" font-weight="700" fill="#18261E">350원</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Deposit Calculator -->
+        <div class="card" style="margin-top:20px;">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+              <h2 style="margin:0;font-size:18px;font-weight:700;">빈용기보증금 예상 환급액 계산기</h2>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--ink-muted);">
+                병 라벨에 ‘빈용기보증금 포함’ 문구와 금액이 표기된 파손 없는 병만 해당됩니다.
+              </p>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:12px;color:var(--ink-muted);display:block;">예상 합계</span>
+              <strong id="deposit-total-won" class="mono-num" style="font-size:26px;color:var(--accent);">0원</strong>
+            </div>
+          </div>
+
+          <div id="deposit-calc-grid" class="tier-grid" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- Conditional Reward Notice -->
+        <div class="card" style="margin-top:20px;">
+          <h2 style="margin:0;font-size:16px;font-weight:700;">조건부 포인트 보상 vs 일반 재활용 구분</h2>
+          <div class="places-grid" style="margin-top:14px;">
+            <div class="notice-info">
+              <strong style="color:var(--ink);display:block;margin-bottom:4px;">알루미늄 캔 · 투명 페트병 (무인회수기)</strong>
+              전국 공통 현금 보증금은 없으나, 지자체 또는 민간 무인회수기(예: 수퍼빈 네프론 등) 설치 지점에서는 기기 안내 기준에 따라 포인트가 적립될 수 있습니다. 현장 기기 안내를 확인하세요.
+            </div>
+            <div class="notice-info">
+              <strong style="color:var(--ink);display:block;margin-bottom:4px;">종이팩 · 폐건전지 (주민센터 교환)</strong>
+              일부 시·군·구 주민센터에서는 일정 수량 이상의 종이팩이나 폐건전지를 종량제 봉투·휴지 등으로 교환해 주는 사업을 운영합니다. 지자체 공고를 확인해 주세요.
+            </div>
+            <div class="notice-info">
+              <strong style="color:var(--ink);display:block;margin-bottom:4px;">일반 재활용 쓰레기 (플라스틱·종이·비닐)</strong>
+              별도 현금 보상은 없지만, 이물질을 헹구고 라벨·뚜껑을 분리해 배출하면 자원 재활용률을 높이고 소각·매립을 줄일 수 있습니다.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. DISPOSAL GUIDE SCREEN -->
+      <section id="screen-guide" class="hidden">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+          <div>
+            <h1 style="margin:0;font-size:24px;font-weight:800;">품목별 올바른 분리배출 방법</h1>
+            <p style="margin:6px 0 0;font-size:14px;color:var(--ink-muted);">
+              주요 재활용 품목의 세척·라벨 제거·전용함 배출 기준을 확인하세요.
+            </p>
+          </div>
+          <button type="button" class="btn-primary" data-nav="camera" style="min-height:46px;">카메라로 촬영하기</button>
+        </div>
+
+        <div id="guide-category-tabs" class="tab-strip"></div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="kicker-line" id="guide-kicker"></div>
+          <h2 id="guide-title" style="margin:8px 0 0;font-size:22px;font-weight:800;"></h2>
+          <p id="guide-summary" style="margin:8px 0 0;font-size:14px;color:var(--ink-muted);line-height:1.6;"></p>
+          <ol id="guide-steps" class="step-list"></ol>
+          <div id="guide-local-note" class="notice-warn" style="margin-top:16px;"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>에코픽 (ECO PICK) · 스마트폰 센서 기반 분리배출 안내</span>
+      <span>지역 및 공동주택별 세부 분리배출 기준과 매장별 빈용기 취급 여부는 현장 안내를 우선 확인해 주세요.</span>
+    </footer>
+
+    <script>
+      (function () {
+        'use strict';
+
+        // ---------- Data: Verified Korean Disposal Guides & Statutory Deposit Rules ----------
+        var WASTE_GUIDES = {
+          transparent_pet: {
+            id: 'transparent_pet',
+            label: '투명 페트병',
+            examples: '생수병, 투명 음료 페트병',
+            rewardType: 'conditional',
+            rewardTitle: '조건부 포인트 적립 가능 (현장 확인 필요)',
+            rewardSummary:
+              '전국 공통 현금 보증금은 없으나, 지자체·무인회수기(예: 수퍼빈 등) 운영 지점에서는 적립이 가능할 수 있습니다. 적립 단가는 설치 지점마다 다르므로 현장 기기 안내를 확인하세요.',
+            recommendedFilter: 'can_pet',
+            prep: [
+              '내용물을 완전히 비우고 깨끗한 물로 헹구기',
+              '겉면 비닐 라벨(상표) 떼어내기',
+              '병을 찌그러뜨린 뒤 뚜껑 닫아 전용함에 배출하기'
+            ],
+            steps: [
+              { title: '비우고 헹구기', detail: '남은 음료나 이물질이 남지 않도록 물로 가볍게 헹굽니다.' },
+              { title: '라벨 제거하기', detail: '페트병 몸체에 붙은 비닐 라벨을 제거해 비닐류로 따로 배출합니다.' },
+              { title: '압착 후 뚜껑 닫기', detail: '부피를 줄이기 위해 찌그러뜨린 뒤 뚜껑을 닫아 투명 페트병 전용 수거함에 넣습니다.' }
+            ],
+            localNote: '공동주택이나 지자체에 따라 투명 페트병 전용 배출 요일이나 전용 봉투 사용 기준이 다를 수 있습니다.'
+          },
+          plastic: {
+            id: 'plastic',
+            label: '플라스틱',
+            examples: '유색 페트병, 배달용기, 세제통',
+            rewardType: 'none',
+            rewardTitle: '일반 재활용 품목 (보증금 대상 아님)',
+            rewardSummary: '일반 플라스틱류는 현금 보증금 대상이 아닙니다. 이물질을 깨끗이 세척해 재질에 맞게 분리배출해 주세요.',
+            recommendedFilter: 'all',
+            prep: [
+              '음식물·양념 등 내용물을 완전히 비우기',
+              '기름기나 잔여물이 남지 않도록 깨끗이 세척하기',
+              '부착된 비닐 라벨·종이 스티커·금속 스프링 제거하기'
+            ],
+            steps: [
+              { title: '내용물 비우기 및 세척', detail: '음식물이 묻은 플라스틱 용기는 물로 깨끗이 씻어 말립니다. 기름기가 심하게 배어 닦이지 않으면 일반쓰레기(종량제)로 버려야 합니다.' },
+              { title: '다른 재질 분리하기', detail: '뚜껑, 펌프 속 금속 스프링, 비닐 포장재 등 다른 재질은 따로 떼어냅니다.' },
+              { title: '플라스틱 수거함 배출', detail: '재활용 마크(PP, PE, PS 등)를 확인해 플라스틱류 수거함에 넣습니다.' }
+            ],
+            localNote: '지자체에 따라 붉은 양념이 배거나 세척이 어려운 배달용기는 일반쓰레기(종량제 봉투) 배출을 안내하기도 합니다.'
+          },
+          can: {
+            id: 'can',
+            label: '캔류 (알루미늄·철)',
+            examples: '음료캔, 맥주캔, 통조림캔',
+            rewardType: 'conditional',
+            rewardTitle: '무인회수기 포인트 적립 가능 여부 확인 필요',
+            rewardSummary:
+              '캔류는 전국 공통 현금 보증금 제도가 없습니다. 다만 일부 지자체·무인회수기에서 포인트 적립이 운영될 수 있으므로 설치 장소의 실제 안내를 확인해 주세요.',
+            recommendedFilter: 'can_pet',
+            prep: [
+              '내용물을 완전히 비우고 물로 헹구기',
+              '플라스틱 뚜껑이나 부착된 스티커 제거하기',
+              '부탄가스·스프레이 캔은 실외에서 완전히 구멍을 뚫어 가스 빼기'
+            ],
+            steps: [
+              { title: '내용물 비우고 헹구기', detail: '음료나 통조림 기름을 비우고 물로 헹궈 악취와 벌레 꼬임을 방지합니다.' },
+              { title: '이물질 및 플라스틱 제거', detail: '담배꽁초 등 이물질을 넣지 말고, 플라스틱 뚜껑이 있다면 분리해 배출합니다.' },
+              { title: '압착 후 캔 전용함 배출', detail: '가능한 경우 살짝 찌그러뜨려 캔/고철류 수거함에 배출합니다.' }
+            ],
+            localNote: '부탄가스나 에어로졸 캔은 반드시 바람이 잘 통하는 실외에서 잔여 가스를 완전히 제거한 뒤 배출해야 합니다.'
+          },
+          deposit_bottle: {
+            id: 'deposit_bottle',
+            label: '빈용기 보증금 유리병',
+            examples: '소주병, 맥주병 (보증금 표기 병)',
+            rewardType: 'deposit',
+            rewardTitle: '빈용기보증금 환불 가능 (70원~350원)',
+            rewardSummary:
+              '라벨에 빈용기보증금 문구와 금액이 표기된 파손 없는 유리병은 마트·슈퍼 등 소매점에 반환하면 규격별 법정 보증금(70원~350원)을 환불받을 수 있습니다.',
+            recommendedFilter: 'deposit_bottle',
+            prep: [
+              '내용물을 비우고 이물질(담배꽁초 등) 넣지 않기',
+              '병이 깨지거나 금이 가지 않도록 주의하기',
+              '병목·라벨의 빈용기보증금 금액 표기 확인하기'
+            ],
+            steps: [
+              { title: '파손·오염 여부 확인', detail: '유리병이 깨지거나 심하게 오염되면 보증금 반환이 거절될 수 있습니다.' },
+              { title: '내용물 비우기 (라벨 유지)', detail: '안의 액체를 비우고 물로 가볍게 헹굽니다. 보증금 확인을 위해 기본 라벨은 억지로 긁어내지 않는 편이 안전합니다.' },
+              { title: '소매점·반환 수거함 방문', detail: '주변 마트, 슈퍼, 편의점 등 빈용기 취급 소매점에 반환해 보증금을 돌려받습니다.' }
+            ],
+            localNote: '소매점 규모에 따라 1인 1일 반환 수량 제한(예: 30병 이하 등)이나 취급 여부가 다를 수 있습니다.'
+          },
+          glass: {
+            id: 'glass',
+            label: '일반 유리류',
+            examples: '음료수병, 잼병, 깨진 유리',
+            rewardType: 'none',
+            rewardTitle: '일반 재활용 품목 (보증금 비대상)',
+            rewardSummary: '보증금 표기가 없는 일반 유리병·잼병 등은 현금 보증금 대상이 아닙니다. 깨진 유리는 재활용이 불가합니다.',
+            recommendedFilter: 'all',
+            prep: [
+              '병 안의 내용물을 비우고 깨끗이 씻기',
+              '금속·플라스틱 뚜껑은 재질별로 따로 분리하기',
+              '깨진 유리나 도자기·거울·내열유리는 신문지로 감싸 불연성 종량제로 버리기'
+            ],
+            steps: [
+              { title: '뚜껑 분리 및 세척', detail: '병뚜껑은 캔/플라스틱으로 분리하고 병 내부는 물로 깨끗이 헹굽니다.' },
+              { title: '깨진 유리 여부 구분', detail: '깨지지 않은 일반 유리병만 유리병 수거함에 넣고, 깨진 유리나 거울·도자기는 불연성 폐기물 봉투(마대)에 버립니다.' }
+            ],
+            localNote: '도자기, 사기그릇, 내열유리 냄비, 거울, 전구 등은 유리병 재활용품에 섞으면 안 됩니다.'
+          },
+          paper: {
+            id: 'paper',
+            label: '종이류 · 종이팩',
+            examples: '택배 박스, 신문지, 우유팩·멸균팩',
+            rewardType: 'conditional',
+            rewardTitle: '종이팩 주민센터 교환 여부 확인 가능',
+            rewardSummary: '일반 종이류는 보상이 없으나, 일부 지자체 주민센터에서는 씻어 말린 종이팩을 휴지·종량제봉투 등으로 교환해 주는 사업을 운영합니다.',
+            recommendedFilter: 'recycling_center',
+            prep: [
+              '택배 박스 테이프, 송장 스티커, 철핀 모두 떼어내기',
+              '물기에 젖거나 기름에 오염된 종이는 일반쓰레기로 버리기',
+              '우유팩·멸균팩은 씻어서 펼쳐 말린 뒤 일반 종이와 따로 모으기'
+            ],
+            steps: [
+              { title: '이물질·테이프 제거', detail: '박스의 비닐 테이프와 택배 송장 스티커를 완전히 제거한 뒤 납작하게 접습니다.' },
+              { title: '종이팩 별도 분리', detail: '우유팩·두유팩 등 종이팩은 물로 헹구고 가위로 펼쳐 말려 종이팩 전용함이나 주민센터로 배출합니다.' },
+              { title: '오염 종이 제외', detail: '영수증(감열지), 코팅지, 기름 묻은 피자 박스 조각 등은 일반쓰레기(종량제)로 버립니다.' }
+            ],
+            localNote: '영수증이나 랩·비닐 코팅된 전단지는 재활용되지 않으므로 일반쓰레기로 구분하세요.'
+          },
+          vinyl: {
+            id: 'vinyl',
+            label: '비닐류',
+            examples: '과자봉지, 비닐봉투, 에어캡',
+            rewardType: 'none',
+            rewardTitle: '일반 재활용 품목',
+            rewardSummary: '비닐류는 보증금 대상이 아닙니다. 깨끗이 씻고 말려 투명/반투명 봉투에 모아 배출하세요.',
+            recommendedFilter: 'all',
+            prep: [
+              '과자 부스러기나 양념 등 이물질 털어내고 씻기',
+              '물기가 남지 않도록 말리기',
+              '오염 제거가 어려운 비닐은 일반쓰레기로 버리기'
+            ],
+            steps: [
+              { title: '이물질 제거 및 세척', detail: '라면 봉지나 배달 음식 비닐은 국물·가루가 남지 않게 가볍게 헹궈 말립니다.' },
+              { title: '비닐 전용 수거함 배출', detail: '날리지 않도록 큰 비닐봉투에 한꺼번에 모아 비닐류 수거함에 넣습니다.' }
+            ],
+            localNote: '음식물 포장 랩(PVC 랩) 등 재질이 다른 일부 랩은 일반쓰레기 배출을 권장하는 지자체가 많습니다.'
+          },
+          general: {
+            id: 'general',
+            label: '일반쓰레기 (종량제)',
+            examples: '오염 심한 용기, 복합재질, 깨진 유리',
+            rewardType: 'none',
+            rewardTitle: '재활용·보상 불가 (종량제 배출)',
+            rewardSummary: '오염이 심해 세척이 어렵거나 재질 분리가 불가능한 쓰레기는 재활용품에 섞지 말고 종량제 봉투에 버려야 합니다.',
+            recommendedFilter: 'all',
+            prep: [
+              '물기를 최대한 제거하기',
+              '날카로운 물건이나 깨진 유리는 신문지·박스로 두껍게 감싸기',
+              '지자체 규격 종량제 봉투 또는 불연성 마대 사용하기'
+            ],
+            steps: [
+              { title: '재활용 불가 품목 확인', detail: '기름·양념이 스며 세척이 불가능한 용기, 영수증, 칫솔, 고무장갑 등은 일반쓰레기입니다.' },
+              { title: '안전 포장 후 종량제 배출', detail: '유리 조각이나 칼날 등 위험물은 종이로 감싸 수거 작업자가 다치지 않도록 표기해 배출합니다.' }
+            ],
+            localNote: '폐형광등·폐건전지·대형폐기물은 별도 수거함이나 지자체 신고 배출 기준을 따라야 합니다.'
+          },
+          food_waste: {
+            id: 'food_waste',
+            label: '음식물류 폐기물',
+            examples: '남은 음식물, 과일 껍질',
+            rewardType: 'none',
+            rewardTitle: '보상 비대상 (음식물 전용 수거함)',
+            rewardSummary: '음식물류 폐기물은 물기를 최대한 제거한 뒤 음식물 전용 수거함이나 전용 봉투에 배출해야 합니다.',
+            recommendedFilter: 'all',
+            prep: [
+              '이물질(비닐, 이쑤시개, 뼈, 조개껍데기, 달걀껍데기) 제거하기',
+              '물기와 염분을 최대한 빼기',
+              '딱딱한 껍데기나 씨앗은 일반쓰레기(종량제)로 분리하기'
+            ],
+            steps: [
+              { title: '수분 및 이물질 제거', detail: '동물 뼈, 조개껍데기, 호두 등 딱딱한 껍질은 사료화·퇴비화가 어려우므로 일반쓰레기입니다.' },
+              { title: '음식물 전용함 배출', detail: '지자체 음식물 전용 종량제 봉투 또는 RFID 종량기·전용 수거함에 버립니다.' }
+            ],
+            localNote: '채소 뿌리·껍질 등 음식물/일반쓰레기 경계 품목은 지자체별 기준이 다를 수 있습니다.'
+          }
+        };
+
+        var DEPOSIT_TIERS = [
+          { id: 't70', label: '190mL 미만 소형 병', won: 70 },
+          { id: 't100', label: '190mL ~ 400mL 미만 (소주병 등)', won: 100 },
+          { id: 't130', label: '400mL ~ 1,000mL 미만 (맥주병 등)', won: 130 },
+          { id: 't350', label: '1,000mL 이상 대형 병', won: 350 }
+        ];
+
+        var MANUAL_CAT_KEYS = ['transparent_pet', 'plastic', 'can', 'deposit_bottle', 'glass', 'paper', 'vinyl', 'general'];
+        var HISTORY_KEY = 'ecopick_single_history_v1';
+        var OPT_IN_KEY = 'ecopick_single_optin_v1';
+
+        // ---------- App State ----------
+        var state = {
+          tab: 'home',
+          capturedImageUrl: null,
+          visualNote: '',
+          isUncertainAnalysis: true,
+          aiResult: null,
+          selectedCategory: 'transparent_pet',
+          selectedCondition: 'unknown',
+          cameraStream: null,
+          videoReady: false,
+          sensorTimer: null,
+          sensorMeta: null,
+          capturedSensorData: null,
+          mapFilter: 'all',
+          mapViewMode: 'google',
+          location: null, // { lat, lng, label, areaName, countryCode, isGps }
+          places: [],
+          selectedPlace: null,
+          mapZoom: 1,
+          depositQty: { t70: 0, t100: 0, t130: 0, t350: 0 },
+          guideCategory: 'transparent_pet',
+          saveHistory: false,
+          history: []
+        };
+
+        try {
+          state.saveHistory = localStorage.getItem(OPT_IN_KEY) === 'true';
+          if (state.saveHistory) {
+            state.history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') || [];
+          }
+        } catch (e) {
+          state.saveHistory = false;
+          state.history = [];
+        }
+
+        // ---------- Utilities ----------
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function escapeHtml(str) {
+          return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+
+        function formatDistance(meters) {
+          if (meters < 1000) return meters + 'm';
+          return (meters / 1000).toFixed(2) + 'km';
+        }
+
+        function haversineMeters(lat1, lng1, lat2, lng2) {
+          var toRad = function (d) { return (d * Math.PI) / 180; };
+          var R = 6371000;
+          var dLat = toRad(lat2 - lat1);
+          var dLng = toRad(lng2 - lng1);
+          var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+          return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
+
+        function isEmbeddedFrame() {
+          try {
+            return window.self !== window.top;
+          } catch (e) {
+            return true;
+          }
+        }
+
+        // ---------- Navigation ----------
+        function switchTab(nextTab) {
+          if (state.tab === 'camera' && nextTab !== 'camera') {
+            stopCameraStream();
+          }
+          state.tab = nextTab;
+          var screens = ['home', 'camera', 'result', 'map', 'rewards', 'guide'];
+          screens.forEach(function (name) {
+            var el = $('screen-' + name);
+            if (el) el.classList.toggle('hidden', name !== nextTab);
+          });
+
+          document.querySelectorAll('[data-nav]').forEach(function (btn) {
+            var target = btn.getAttribute('data-nav');
+            if (btn.classList.contains('nav-link') || btn.classList.contains('mobile-tab-btn')) {
+              btn.classList.toggle('active', target === nextTab);
+            }
+          });
+
+          if (nextTab === 'camera' && !state.capturedImageUrl) {
+            setCameraView('consent');
+            refreshPermissionHints();
+          }
+          if (nextTab === 'result') {
+            renderResultScreen();
+          }
+          if (nextTab === 'map') {
+            $('map-new-tab-link').classList.toggle('hidden', !isEmbeddedFrame());
+            refreshPermissionHints();
+          }
+
+          try {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } catch (e) {
+            window.scrollTo(0, 0);
+          }
+        }
+
+        document.addEventListener('click', function (e) {
+          var targetEl = e.target && e.target.closest ? e.target.closest('[data-nav]') : null;
+          if (!targetEl) return;
+          var target = targetEl.getAttribute('data-nav');
+          if (target === 'camera') {
+            state.capturedImageUrl = null;
+          }
+          if (target) switchTab(target);
+        });
+
+        // ---------- Home History ----------
+        function renderHistory() {
+          var toggle = $('toggle-history');
+          var clearBtn = $('btn-clear-history');
+          var list = $('home-history-list');
+          toggle.checked = state.saveHistory;
+          clearBtn.classList.toggle('hidden', state.history.length === 0);
+          list.classList.toggle('hidden', state.history.length === 0);
+
+          list.innerHTML = state.history
+            .slice(0, 6)
+            .map(function (item) {
+              var dateStr = '';
+              try {
+                dateStr = new Date(item.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+              } catch (e) {}
+              return (
+                '<button type="button" class="place-card" data-history-cat="' + escapeHtml(item.category) + '" style="text-align:left;">' +
+                '<strong style="font-size:14px;color:var(--ink);">' + escapeHtml(item.label) + '</strong>' +
+                '<span style="font-size:12px;color:var(--ink-muted);margin-top:4px;">' + escapeHtml(dateStr) + '</span>' +
+                '</button>'
+              );
+            })
+            .join('');
+
+          list.querySelectorAll('[data-history-cat]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var cat = btn.getAttribute('data-history-cat');
+              state.capturedImageUrl = null;
+              state.selectedCategory = WASTE_GUIDES[cat] ? cat : 'general';
+              state.selectedCondition = 'unknown';
+              state.isUncertainAnalysis = false;
+              state.visualNote = '';
+              switchTab('result');
+            });
+          });
+        }
+
+        function saveHistoryEntry(catId) {
+          if (!state.saveHistory) return;
+          var guide = WASTE_GUIDES[catId] || WASTE_GUIDES.general;
+          state.history = [{ category: guide.id, label: guide.label, createdAt: new Date().toISOString() }]
+            .concat(state.history)
+            .slice(0, 12);
+          try {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history));
+          } catch (e) {}
+          renderHistory();
+        }
+
+        $('toggle-history').addEventListener('change', function (e) {
+          state.saveHistory = e.target.checked;
+          try {
+            localStorage.setItem(OPT_IN_KEY, String(state.saveHistory));
+            if (!state.saveHistory) {
+              localStorage.removeItem(HISTORY_KEY);
+              state.history = [];
+            }
+          } catch (err) {}
+          renderHistory();
+        });
+
+        $('btn-clear-history').addEventListener('click', function () {
+          state.history = [];
+          try {
+            localStorage.removeItem(HISTORY_KEY);
+          } catch (e) {}
+          renderHistory();
+        });
+
+        // ---------- Camera & Image Handling (Start Button Requests Permission) ----------
+        function refreshPermissionHints() {
+          var inIframe = isEmbeddedFrame();
+          var camNotice = $('cam-perm-notice');
+          var camNoticeTxt = $('cam-perm-notice-text');
+          var mapNotice = $('map-perm-notice');
+
+          $('cam-consent-sec-state').textContent = window.isSecureContext
+            ? (inIframe ? 'HTTPS (미리보기 창)' : 'HTTPS 보안 연결')
+            : '비보안 연결';
+          $('cam-consent-perm-state').textContent = inIframe ? '프레임 확인 필요' : '시작 시 요청';
+          $('cam-consent-sensor-badge').textContent = inIframe ? '권한 확인 필요' : '대기 중';
+
+          if (inIframe) {
+            camNotice.classList.remove('hidden');
+            camNoticeTxt.textContent =
+              '현재 미리보기 창(프레임)에서 실행 중이어서 브라우저 정책상 카메라 권한 팝업이 제한될 수 있습니다. 아래 "새 탭에서 열어 권한 허용하기" 또는 "기본 카메라로 촬영"을 이용해 주세요.';
+            mapNotice.classList.remove('hidden');
+            mapNotice.textContent =
+              '현재 미리보기 창(프레임)에서는 GPS 위치 권한 팝업이 제한될 수 있습니다. "새 탭에서 열어 GPS 허용"을 누르거나 "네트워크 위치로 바로 찾기" · 지역명 검색을 이용해 주세요.';
+          } else {
+            camNotice.classList.add('hidden');
+            mapNotice.classList.add('hidden');
+          }
+
+          if (navigator.permissions && navigator.permissions.query) {
+            try {
+              navigator.permissions.query({ name: 'camera' }).then(function (status) {
+                if (status) {
+                  var labelMap = { granted: '허용됨', prompt: '요청 대기', denied: '차단됨' };
+                  $('cam-consent-perm-state').textContent = labelMap[status.state] || status.state;
+                  $('cam-consent-sensor-badge').textContent =
+                    status.state === 'granted' ? '센서 사용 가능' : status.state === 'denied' ? '차단됨' : '대기 중';
+                }
+                if (status && status.state === 'denied') {
+                  camNotice.classList.remove('hidden');
+                  camNoticeTxt.textContent =
+                    '브라우저 설정에서 카메라 권한이 "차단"되어 있어 팝업이 다시 뜨지 않습니다. 주소창 왼쪽 사이트 설정 아이콘에서 카메라를 "허용"으로 변경 후 새로고침하거나, "기본 카메라로 촬영"을 이용해 주세요.';
+                }
+              }).catch(function () {});
+            } catch (e) {}
+            try {
+              navigator.permissions.query({ name: 'geolocation' }).then(function (status) {
+                if (status && status.state === 'denied') {
+                  mapNotice.classList.remove('hidden');
+                  mapNotice.textContent =
+                    '브라우저 설정에서 위치 권한이 "차단"되어 있어 팝업이 다시 뜨지 않습니다. 주소창 왼쪽 사이트 설정 아이콘에서 위치를 "허용"으로 바꾸거나, 아래 "네트워크 위치로 바로 찾기" · 지역명 검색을 이용해 주세요.';
+                }
+              }).catch(function () {});
+            } catch (e) {}
+          }
+        }
+
+        function computeCanvasSensorMetrics(sourceCanvas, sourceLabel, meta) {
+          var w = sourceCanvas.width || 0;
+          var h = sourceCanvas.height || 0;
+          var avgR = 0;
+          var avgG = 0;
+          var avgB = 0;
+          var avgLuma = 0;
+          var sharpness = 0;
+
+          try {
+            var sw = 96;
+            var sh = 72;
+            var probe = document.createElement('canvas');
+            probe.width = sw;
+            probe.height = sh;
+            var pctx = probe.getContext('2d');
+            if (pctx && w > 0 && h > 0) {
+              pctx.drawImage(sourceCanvas, 0, 0, sw, sh);
+              var px = pctx.getImageData(0, 0, sw, sh).data;
+              var lumas = new Float32Array(sw * sh);
+              var count = sw * sh;
+              for (var i = 0; i < count; i++) {
+                var r = px[i * 4];
+                var g = px[i * 4 + 1];
+                var b = px[i * 4 + 2];
+                avgR += r;
+                avgG += g;
+                avgB += b;
+                var y = 0.299 * r + 0.587 * g + 0.114 * b;
+                lumas[i] = y;
+                avgLuma += y;
+              }
+              avgR = Math.round(avgR / count);
+              avgG = Math.round(avgG / count);
+              avgB = Math.round(avgB / count);
+              avgLuma = avgLuma / count;
+
+              var edgeSum = 0;
+              var edgeCount = 0;
+              for (var row = 1; row < sh - 1; row++) {
+                for (var col = 1; col < sw - 1; col++) {
+                  var idx = row * sw + col;
+                  var gx = Math.abs(lumas[idx + 1] - lumas[idx - 1]);
+                  var gy = Math.abs(lumas[idx + sw] - lumas[idx - sw]);
+                  edgeSum += gx + gy;
+                  edgeCount++;
+                }
+              }
+              sharpness = edgeCount > 0 ? Math.round(edgeSum / edgeCount) : 0;
+            }
+          } catch (e) {}
+
+          var brightnessPct = Math.min(100, Math.max(0, Math.round((avgLuma / 255) * 100)));
+          var brightnessLabel = brightnessPct < 24 ? '어두움' : brightnessPct > 86 ? '과노출' : '적정 밝기';
+          var sharpnessLabel = sharpness >= 14 ? '선명함' : sharpness >= 7 ? '보통' : '흐림 주의';
+          var m = meta || {};
+
+          return {
+            sourceLabel: sourceLabel || '사진 파일',
+            deviceLabel: m.deviceLabel || '파일/기본 카메라',
+            facingText: m.facingText || '-',
+            resolution: w && h ? w + ' × ' + h + ' px' : '-',
+            fpsText: m.fpsText || '-',
+            brightnessPct: brightnessPct,
+            brightnessText: brightnessPct + '% (' + brightnessLabel + ')',
+            sharpness: sharpness,
+            sharpnessText: sharpness + ' (' + sharpnessLabel + ')',
+            rgbText: 'R:' + avgR + ' G:' + avgG + ' B:' + avgB
+          };
+        }
+
+        function renderSensorSummaryBox(targetId, data) {
+          var box = $(targetId);
+          if (!box) return;
+          if (!data) {
+            box.classList.add('hidden');
+            box.innerHTML = '';
+            return;
+          }
+          box.classList.remove('hidden');
+          box.innerHTML =
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">' +
+            '<strong style="font-size:12px;">카메라 센서 · 촬영 데이터</strong>' +
+            '<span style="font-size:11px;font-weight:700;color:var(--accent);">' + escapeHtml(data.sourceLabel) + '</span>' +
+            '</div>' +
+            '<div class="sensor-grid">' +
+            '<div class="sensor-cell"><small>센서 장치</small><strong>' + escapeHtml(data.deviceLabel) + '</strong></div>' +
+            '<div class="sensor-cell"><small>해상도</small><strong>' + escapeHtml(data.resolution) + '</strong></div>' +
+            '<div class="sensor-cell"><small>렌즈 · FPS</small><strong>' + escapeHtml(data.facingText + (data.fpsText !== '-' ? ' · ' + data.fpsText : '')) + '</strong></div>' +
+            '<div class="sensor-cell"><small>평균 밝기(조도)</small><strong>' + escapeHtml(data.brightnessText) + '</strong></div>' +
+            '<div class="sensor-cell"><small>윤곽 선명도</small><strong>' + escapeHtml(data.sharpnessText) + '</strong></div>' +
+            '<div class="sensor-cell"><small>색상 평균(RGB)</small><strong>' + escapeHtml(data.rgbText) + '</strong></div>' +
+            '</div>';
+        }
+
+        function stopLiveSensorMonitor() {
+          if (state.sensorTimer) {
+            clearInterval(state.sensorTimer);
+            state.sensorTimer = null;
+          }
+        }
+
+        function startLiveSensorMonitor(stream) {
+          stopLiveSensorMonitor();
+          var tracks = stream && stream.getVideoTracks ? stream.getVideoTracks() : [];
+          var track = tracks[0] || null;
+          var settings = track && track.getSettings ? track.getSettings() : {};
+          var facingRaw = settings.facingMode || '';
+          var facingText =
+            facingRaw === 'environment'
+              ? '후면 (environment)'
+              : facingRaw === 'user'
+              ? '전면 (user)'
+              : '기본 카메라';
+          var fpsText = settings.frameRate ? Math.round(settings.frameRate) + ' fps' : '자동';
+          var deviceLabel = (track && track.label) || '표준 카메라 센서';
+
+          state.sensorMeta = {
+            deviceLabel: deviceLabel,
+            facingText: facingText,
+            fpsText: fpsText
+          };
+
+          $('cam-live-lens-badge').textContent = facingText;
+          $('cam-sensor-device-name').textContent = deviceLabel;
+          $('sensor-live-fps').textContent = facingText + ' · ' + fpsText;
+          if (settings.width && settings.height) {
+            $('sensor-live-res').textContent = settings.width + ' × ' + settings.height + ' px';
+          }
+
+          var sampleCanvas = document.createElement('canvas');
+          var tick = function () {
+            var video = $('camera-video');
+            if (!video || !state.cameraStream || video.readyState < 2 || !video.videoWidth) return;
+            var vw = video.videoWidth;
+            var vh = video.videoHeight;
+            $('sensor-live-res').textContent = vw + ' × ' + vh + ' px';
+            sampleCanvas.width = 160;
+            sampleCanvas.height = Math.max(90, Math.round((160 * vh) / vw));
+            var sctx = sampleCanvas.getContext('2d');
+            if (!sctx) return;
+            sctx.drawImage(video, 0, 0, sampleCanvas.width, sampleCanvas.height);
+            var stats = computeCanvasSensorMetrics(sampleCanvas, '실시간 후면 카메라 센서', state.sensorMeta);
+            $('sensor-live-brightness').textContent = stats.brightnessText;
+            $('sensor-live-sharpness').textContent = stats.sharpnessText;
+            $('sensor-live-rgb').textContent = stats.rgbText;
+            $('sensor-live-ready').textContent =
+              stats.brightnessPct < 24
+                ? '조도 낮음 (밝게)'
+                : stats.sharpness < 7
+                ? '초점 맞추는 중'
+                : '촬영 적합';
+          };
+
+          tick();
+          state.sensorTimer = setInterval(tick, 450);
+        }
+
+        function setCameraView(viewName) {
+          ['consent', 'live', 'unavailable', 'preview'].forEach(function (v) {
+            $('cam-state-' + v).classList.toggle('hidden', v !== viewName);
+          });
+          if (viewName === 'unavailable') {
+            $('cam-iframe-tip').classList.toggle('hidden', !isEmbeddedFrame());
+          }
+          if (viewName === 'preview') {
+            $('cam-analyze-error').classList.add('hidden');
+            renderSensorSummaryBox('preview-sensor-summary', state.capturedSensorData);
+          }
+        }
+
+        function stopCameraStream() {
+          stopLiveSensorMonitor();
+          state.videoReady = false;
+          if (state.cameraStream) {
+            state.cameraStream.getTracks().forEach(function (track) {
+              track.stop();
+            });
+            state.cameraStream = null;
+          }
+          var video = $('camera-video');
+          if (video) video.srcObject = null;
+        }
+
+        function startCameraFromUserButton() {
+          stopCameraStream();
+          if (!window.isSecureContext) {
+            $('cam-error-text').textContent =
+              '실시간 웹 카메라는 보안 연결(HTTPS) 또는 localhost 환경에서만 동작합니다. "기본 카메라로 바로 촬영" 또는 "사진 파일 업로드"를 이용해 주세요.';
+            setCameraView('unavailable');
+            return;
+          }
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            $('cam-error-text').textContent =
+              '이 브라우저는 실시간 웹 카메라를 지원하지 않습니다. 아래 "기본 카메라로 바로 촬영" 또는 "사진 파일 업로드"를 이용해 주세요.';
+            setCameraView('unavailable');
+            return;
+          }
+
+          var startBtn = $('btn-start-camera');
+          var retryBtn = $('btn-retry-camera');
+          startBtn.disabled = true;
+          retryBtn.disabled = true;
+
+          navigator.mediaDevices
+            .getUserMedia({
+              video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } },
+              audio: false
+            })
+            .catch(function (firstErr) {
+              var name = firstErr && firstErr.name ? firstErr.name : '';
+              if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+                throw firstErr;
+              }
+              return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            })
+            .then(function (stream) {
+              startBtn.disabled = false;
+              retryBtn.disabled = false;
+              state.cameraStream = stream;
+              var video = $('camera-video');
+              video.srcObject = stream;
+              video.onloadedmetadata = function () {
+                video.play().catch(function () {});
+                if (video.videoWidth > 0) state.videoReady = true;
+                startLiveSensorMonitor(stream);
+              };
+              video.onplaying = function () {
+                state.videoReady = true;
+              };
+              setCameraView('live');
+              startLiveSensorMonitor(stream);
+            })
+            .catch(function (err) {
+              startBtn.disabled = false;
+              retryBtn.disabled = false;
+              var errName = err && err.name ? err.name : '';
+              var rawMsg = err && err.message ? err.message.toLowerCase() : '';
+              if (rawMsg.indexOf('permissions policy') !== -1) {
+                $('cam-error-text').textContent =
+                  '미리보기 프레임 보안 정책으로 웹 카메라가 차단되었습니다. "새 탭에서 열기"를 누르거나 "기본 카메라로 바로 촬영"을 이용해 주세요.';
+              } else if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+                $('cam-error-text').textContent =
+                  '카메라 권한이 거부되었거나 차단 상태입니다. 주소창 왼쪽 사이트 설정에서 카메라를 "허용"으로 변경 후 다시 시도하시거나, "기본 카메라로 바로 촬영"을 이용해 주세요.';
+              } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+                $('cam-error-text').textContent =
+                  '연결된 카메라 장치를 찾지 못했습니다. "사진 파일 업로드"로 쓰레기 사진을 선택해 주세요.';
+              } else {
+                $('cam-error-text').textContent =
+                  '카메라 연결 중 오류가 발생했습니다(' + (errName || '장치 오류') + '). 기본 카메라 촬영 또는 사진 업로드를 이용해 주세요.';
+              }
+              setCameraView('unavailable');
+            });
+        }
+
+        function loadImageFile(file, goToCameraTab, isNativeCam) {
+          if (!file) return;
+          stopCameraStream();
+          var reader = new FileReader();
+          reader.onload = function () {
+            if (typeof reader.result !== 'string') return;
+            var img = new Image();
+            img.onload = function () {
+              var canvas = $('capture-canvas');
+              var maxDim = 960;
+              var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+              canvas.width = Math.round(img.width * scale);
+              canvas.height = Math.round(img.height * scale);
+              var ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                state.capturedImageUrl = canvas.toDataURL('image/jpeg', 0.85);
+                state.capturedSensorData = computeCanvasSensorMetrics(
+                  canvas,
+                  isNativeCam ? '기본 카메라 센서 촬영' : '사진 파일 불러오기',
+                  {
+                    deviceLabel: isNativeCam ? '모바일 기본 카메라' : file.name || '이미지 파일',
+                    facingText: isNativeCam ? '후면 우선' : '파일',
+                    fpsText: '-'
+                  }
+                );
+              } else {
+                state.capturedImageUrl = reader.result;
+                state.capturedSensorData = null;
+              }
+              $('captured-preview-img').src = state.capturedImageUrl;
+              if (goToCameraTab) switchTab('camera');
+              setCameraView('preview');
+            };
+            img.onerror = function () {
+              state.capturedImageUrl = reader.result;
+              state.capturedSensorData = null;
+              $('captured-preview-img').src = state.capturedImageUrl;
+              if (goToCameraTab) switchTab('camera');
+              setCameraView('preview');
+            };
+            img.src = reader.result;
+          };
+          reader.readAsDataURL(file);
+        }
+
+        $('btn-start-camera').addEventListener('click', startCameraFromUserButton);
+        $('btn-retry-camera').addEventListener('click', startCameraFromUserButton);
+        $('btn-stop-camera').addEventListener('click', function () {
+          stopCameraStream();
+          setCameraView('consent');
+        });
+        $('btn-camera-cancel').addEventListener('click', function () {
+          stopCameraStream();
+          switchTab('home');
+        });
+
+        $('btn-capture-photo').addEventListener('click', function () {
+          var video = $('camera-video');
+          var canvas = $('capture-canvas');
+          if (!video.videoWidth || !video.videoHeight) {
+            $('camera-live-hint').textContent = '카메라 화면을 불러오는 중입니다. 잠시 후 다시 눌러 주세요.';
+            return;
+          }
+          var maxDim = 960;
+          var scale = Math.min(1, maxDim / Math.max(video.videoWidth, video.videoHeight));
+          canvas.width = Math.round(video.videoWidth * scale);
+          canvas.height = Math.round(video.videoHeight * scale);
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          state.capturedImageUrl = canvas.toDataURL('image/jpeg', 0.85);
+          state.capturedSensorData = computeCanvasSensorMetrics(
+            canvas,
+            '실시간 웹 카메라 센서 촬영',
+            state.sensorMeta
+          );
+          stopCameraStream();
+          $('captured-preview-img').src = state.capturedImageUrl;
+          setCameraView('preview');
+        });
+
+        $('btn-retake-photo').addEventListener('click', function () {
+          state.capturedImageUrl = null;
+          state.capturedSensorData = null;
+          setCameraView('consent');
+        });
+
+        $('home-upload-input').addEventListener('change', function (e) {
+          loadImageFile(e.target.files[0], true, false);
+          e.target.value = '';
+        });
+
+        ['cam-native-input-1', 'cam-upload-input-1', 'cam-upload-input-2', 'cam-native-input-2', 'cam-upload-input-3', 'cam-upload-input-4'].forEach(
+          function (inputId) {
+            $(inputId).addEventListener('change', function (e) {
+              var isNative = inputId.indexOf('native') !== -1;
+              loadImageFile(e.target.files[0], false, isNative);
+              e.target.value = '';
+            });
+          }
+        );
+
+        $('btn-analyze-photo').addEventListener('click', function () {
+          if (!state.capturedImageUrl) return;
+          var btn = $('btn-analyze-photo');
+          var errBox = $('cam-analyze-error');
+          errBox.classList.add('hidden');
+          errBox.textContent = '';
+
+          var isHttpOrigin = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+          if (!isHttpOrigin) {
+            errBox.classList.remove('hidden');
+            errBox.textContent =
+              '로컬 HTML 파일(file://)로 직접 실행 중일 때는 AI 서버 인식을 사용할 수 없습니다. 아래에서 쓰레기 품목을 직접 선택해 정확한 분리배출 안내를 확인해 주세요.';
+            return;
+          }
+
+          btn.disabled = true;
+          btn.textContent = 'AI가 사진을 분석하고 있습니다...';
+
+          fetch('/api/analyze-waste', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageBase64: state.capturedImageUrl,
+              mimeType: 'image/jpeg'
+            })
+          })
+            .then(function (r) {
+              return r.json().then(function (data) {
+                return { ok: r.ok, data: data };
+              });
+            })
+            .then(function (res) {
+              btn.disabled = false;
+              btn.textContent = 'AI 사진 분석 및 분리배출 확인하기';
+              if (!res.ok || !res.data || !res.data.category) {
+                var errMsg = (res.data && res.data.error) || '사진 분석 중 오류가 발생했습니다. 아래에서 품목을 직접 선택해 주세요.';
+                errBox.classList.remove('hidden');
+                errBox.textContent = errMsg;
+                return;
+              }
+              var d = res.data;
+              var mappedCat = WASTE_GUIDES[d.category] ? d.category : 'general';
+              state.aiResult = d;
+              state.selectedCategory = mappedCat;
+              state.selectedCondition =
+                d.conditionStatus === 'clean'
+                  ? 'clean'
+                  : d.conditionStatus === 'contaminated'
+                  ? 'contaminated'
+                  : 'unknown';
+              state.isUncertainAnalysis = Boolean(d.isUncertain || d.category === 'uncertain');
+              state.visualNote =
+                (d.itemName ? '인식 품목: ' + d.itemName + (d.conditionDescription ? ' · ' + d.conditionDescription : '') : d.conditionDescription || '') ||
+                '';
+              saveHistoryEntry(mappedCat);
+              switchTab('result');
+            })
+            .catch(function () {
+              btn.disabled = false;
+              btn.textContent = 'AI 사진 분석 및 분리배출 확인하기';
+              errBox.classList.remove('hidden');
+              errBox.textContent = '서버와 통신할 수 없어 사진 분석에 실패했습니다. 아래에서 품목을 직접 선택해 주세요.';
+            });
+        });
+
+        // Manual Category Grids
+        function renderManualGrid(containerId, activeId, onPick) {
+          var box = $(containerId);
+          box.innerHTML = MANUAL_CAT_KEYS.map(function (key) {
+            var g = WASTE_GUIDES[key];
+            return (
+              '<button type="button" class="cat-btn' + (activeId === key ? ' active' : '') + '" data-cat-pick="' + key + '">' +
+              '<strong>' + escapeHtml(g.label) + '</strong>' +
+              '<span>' + escapeHtml(g.examples) + '</span>' +
+              '</button>'
+            );
+          }).join('');
+          box.querySelectorAll('[data-cat-pick]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              onPick(btn.getAttribute('data-cat-pick'));
+            });
+          });
+        }
+
+        renderManualGrid('camera-manual-grid', null, function (catKey) {
+          state.capturedImageUrl = null;
+          state.aiResult = null;
+          state.selectedCategory = catKey;
+          state.selectedCondition = 'unknown';
+          state.isUncertainAnalysis = false;
+          state.visualNote = '';
+          saveHistoryEntry(catKey);
+          switchTab('result');
+        });
+
+        // ---------- Result Screen ----------
+        function renderResultScreen() {
+          var guide = WASTE_GUIDES[state.selectedCategory] || WASTE_GUIDES.plastic;
+          var ai = state.aiResult && WASTE_GUIDES[state.aiResult.category] === guide ? state.aiResult : null;
+
+          $('result-kicker').innerHTML =
+            '<span>' + escapeHtml(guide.label) + '</span>' +
+            '<span aria-hidden="true">·</span>' +
+            '<span>' + (ai ? 'AI 사진 인식 결과' : state.capturedImageUrl ? '사진 확인 결과' : '직접 선택 안내') + '</span>';
+          $('result-title').textContent = (ai && ai.itemName ? ai.itemName + ' (' + guide.label + ')' : guide.label + ' 분리배출 안내');
+
+          var banner = $('result-uncertain-banner');
+          if (state.isUncertainAnalysis) {
+            banner.classList.remove('hidden');
+            banner.innerHTML =
+              '<div><strong>정확한 품목·오염 상태를 한 번 더 확인해 주세요</strong>' +
+              '<p style="margin:4px 0 0;">' +
+              escapeHtml((ai && ai.uncertaintyReason) || '사진 각도·조명이나 오염 상태에 따라 재질 구분이 불확실할 수 있습니다. 실제와 다르면 아래에서 품목을 직접 선택해 주세요.') +
+              '</p></div>';
+          } else {
+            banner.classList.add('hidden');
+          }
+
+          if (state.capturedImageUrl) {
+            $('result-photo-card').classList.remove('hidden');
+            $('result-photo-img').src = state.capturedImageUrl;
+            $('result-visual-note').textContent = state.visualNote;
+            renderSensorSummaryBox('result-sensor-summary', state.capturedSensorData);
+          } else {
+            $('result-photo-card').classList.add('hidden');
+            renderSensorSummaryBox('result-sensor-summary', null);
+          }
+
+          renderManualGrid('result-category-switcher', guide.id, function (newCat) {
+            state.selectedCategory = newCat;
+            state.aiResult = null;
+            state.isUncertainAnalysis = false;
+            saveHistoryEntry(newCat);
+            renderResultScreen();
+          });
+
+          // Condition tabs
+          document.querySelectorAll('#result-condition-tabs [data-cond]').forEach(function (btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-cond') === state.selectedCondition);
+          });
+
+          var condAdvice = $('result-condition-advice');
+          if (state.selectedCondition === 'contaminated') {
+            condAdvice.innerHTML =
+              '<strong style="color:var(--warn-ink);">음식물·이물질 오염 주의:</strong> 내용물을 완전히 비우고 물로 깨끗이 세척해 말려 주세요. 기름기나 양념이 배어 닦이지 않는 경우에는 재활용함에 넣지 말고 일반쓰레기(종량제 봉투)로 배출해야 합니다.';
+          } else if (state.selectedCondition === 'clean') {
+            condAdvice.innerHTML =
+              '<strong style="color:var(--accent);">깨끗한 상태 확인됨:</strong> 라벨·뚜껑 등 다른 재질을 분리한 뒤 아래 단계에 따라 해당 재활용 수거함에 배출해 주세요.';
+          } else {
+            condAdvice.textContent =
+              '내용물이 비워져 있고 이물질이 묻어 있지 않은지 확인한 뒤 위 상태 버튼을 선택하면 맞춤 안내를 확인할 수 있습니다.';
+          }
+
+          var prepList = ai && Array.isArray(ai.prepChecklist) && ai.prepChecklist.length > 0 ? ai.prepChecklist : guide.prep;
+          $('result-prep-checklist').innerHTML = prepList
+            .map(function (line, idx) {
+              return (
+                '<label class="check-item">' +
+                '<input type="checkbox" id="prep-chk-' + idx + '" />' +
+                '<span>' + escapeHtml(line) + '</span>' +
+                '</label>'
+              );
+            })
+            .join('');
+
+          var stepsList = ai && Array.isArray(ai.disposalSteps) && ai.disposalSteps.length > 0 ? ai.disposalSteps : guide.steps;
+          $('result-steps-list').innerHTML = stepsList
+            .map(function (st, idx) {
+              return (
+                '<li class="step-item">' +
+                '<span class="step-num">' + (st.step || idx + 1) + '</span>' +
+                '<div><strong style="display:block;font-size:14px;">' + escapeHtml(st.title) + '</strong>' +
+                '<p style="margin:4px 0 0;font-size:13px;color:var(--ink-muted);line-height:1.55;">' + escapeHtml(st.detail) + '</p></div>' +
+                '</li>'
+              );
+            })
+            .join('');
+
+          $('result-local-rule').innerHTML =
+            '<div><strong>지역별 기준 차이 안내:</strong> ' +
+            escapeHtml((ai && ai.localRuleNote) || guide.localNote) +
+            ' 확인되지 않은 사항은 거주지 구청·관리사무소 기준을 따라 주세요.</div>';
+
+          $('result-reward-title').textContent =
+            ai && ai.confirmedDepositWon ? '빈용기보증금 ' + ai.confirmedDepositWon + '원 환불 가능' : guide.rewardTitle;
+          $('result-reward-summary').textContent = (ai && ai.rewardSummary) || guide.rewardSummary;
+          $('result-deposit-tiers').classList.toggle('hidden', guide.id !== 'deposit_bottle');
+        }
+
+        document.querySelectorAll('#result-condition-tabs [data-cond]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            state.selectedCondition = btn.getAttribute('data-cond');
+            renderResultScreen();
+          });
+        });
+
+        $('btn-result-retake').addEventListener('click', function () {
+          state.capturedImageUrl = null;
+          switchTab('camera');
+        });
+        $('btn-result-home').addEventListener('click', function () {
+          switchTab('home');
+        });
+        $('btn-result-find-places').addEventListener('click', function () {
+          var guide = WASTE_GUIDES[state.selectedCategory] || WASTE_GUIDES.plastic;
+          state.mapFilter = guide.recommendedFilter || 'all';
+          syncMapFilterTabs();
+          switchTab('map');
+          if (state.location) loadNearbyPlaces();
+        });
+        $('btn-result-open-rewards').addEventListener('click', function () {
+          switchTab('rewards');
+        });
+
+        // ---------- Map & GPS Sensor (Start Button Requests Permission) ----------
+        function syncMapFilterTabs() {
+          document.querySelectorAll('#map-filter-tabs [data-map-filter]').forEach(function (btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-map-filter') === state.mapFilter);
+          });
+          updateGoogleSearchTopLink();
+        }
+
+        function updateGoogleSearchTopLink() {
+          var kw =
+            state.mapFilter === 'deposit_bottle'
+              ? '빈병 수거 마트'
+              : state.mapFilter === 'can_pet'
+              ? '재활용 무인회수기 수퍼빈'
+              : state.mapFilter === 'recycling_center'
+              ? '재활용센터'
+              : '재활용 수거함';
+          var area = state.location ? (state.location.areaName || '').trim() : '';
+          var href = state.location
+            ? area
+              ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(area + ' ' + kw)
+              : 'https://www.google.com/maps/search/' + encodeURIComponent(kw) + '/@' + state.location.lat + ',' + state.location.lng + ',15z'
+            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(kw);
+          $('btn-google-search-top').href = href;
+        }
+
+        function showMapError(msg) {
+          var box = $('map-error-box');
+          if (!msg) {
+            box.classList.add('hidden');
+            box.textContent = '';
+          } else {
+            box.classList.remove('hidden');
+            box.innerHTML = '<span>' + escapeHtml(msg) + '</span>';
+          }
+        }
+
+        function requestGpsFromUserButton() {
+          showMapError('');
+          if (!navigator.geolocation) {
+            showMapError('이 브라우저에서는 GPS 위치 기능을 지원하지 않습니다. 지역명을 직접 입력해 검색해 주세요.');
+            return;
+          }
+          if (!window.isSecureContext) {
+            showMapError('GPS 위치 센서는 보안 연결(HTTPS) 또는 로컬 환경에서만 실행됩니다. 아래 지역명 검색을 이용해 주세요.');
+            return;
+          }
+
+          $('btn-gps-center').textContent = '위치 확인 중...';
+          $('btn-gps-top').textContent = '위치 확인 중...';
+
+          var onSuccess = function (pos) {
+            $('btn-gps-center').textContent = '내 현재 위치로 검색 시작 (GPS 권한 요청)';
+            $('btn-gps-top').textContent = '현재 위치 새로고침 (GPS)';
+            $('map-geocode-choices').classList.add('hidden');
+            setActiveLocation(pos.coords.latitude, pos.coords.longitude, '현재 내 위치 (GPS)', true);
+          };
+
+          var onFinalErr = function (err) {
+            $('btn-gps-center').textContent = '내 현재 위치로 검색 시작 (GPS 권한 요청)';
+            $('btn-gps-top').textContent = '내 현재 위치로 검색 시작 (GPS)';
+            var raw = (err && err.message ? err.message : '').toLowerCase();
+            if (raw.indexOf('permissions policy') !== -1 || raw.indexOf('disabled in this document') !== -1) {
+              showMapError('미리보기 창 정책으로 위치 권한이 제한되어 있습니다. 새 탭에서 열거나 지역명으로 직접 검색해 주세요.');
+            } else if (err && err.code === 1) {
+              showMapError('위치 권한이 거부되었습니다. 주소창 사이트 설정에서 위치를 허용하시거나 지역명을 직접 입력해 검색해 주세요.');
+            } else if (err && err.code === 2) {
+              showMapError('위치 신호를 확인할 수 없습니다. Wi-Fi 또는 GPS를 켠 뒤 다시 시도하거나 지역명을 검색해 주세요.');
+            } else {
+              showMapError('위치 확인 응답 시간이 초과되었습니다. 다시 시도하거나 지역명을 검색해 주세요.');
+            }
+          };
+
+          navigator.geolocation.getCurrentPosition(
+            onSuccess,
+            function (firstErr) {
+              if (firstErr && firstErr.code === 1) {
+                onFinalErr(firstErr);
+                return;
+              }
+              navigator.geolocation.getCurrentPosition(onSuccess, onFinalErr, {
+                enableHighAccuracy: false,
+                timeout: 8000,
+                maximumAge: 300000
+              });
+            },
+            { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+          );
+        }
+
+        function setMapViewMode(mode) {
+          state.mapViewMode = mode;
+          var isGoogle = mode === 'google';
+          $('google-map-pane').classList.toggle('hidden', !isGoogle);
+          $('radar-map-pane').classList.toggle('hidden', isGoogle);
+          $('btn-view-google-map').classList.toggle('active', isGoogle);
+          $('btn-view-radar-map').classList.toggle('active', !isGoogle);
+        }
+
+        function updateGoogleMapEmbed() {
+          if (!state.location) return;
+          var iframe = $('google-map-iframe');
+          var statusBar = $('google-map-status-bar');
+          var p = state.selectedPlace;
+          var targetLat = p ? p.lat : state.location.lat;
+          var targetLng = p ? p.lng : state.location.lng;
+          var zoom = p ? 17 : 15;
+          var exactCoords = targetLat + ',' + targetLng;
+          var embedUrl = 'https://www.google.com/maps?q=' + encodeURIComponent(exactCoords) + '&hl=ko&z=' + zoom + '&output=embed';
+          if (iframe.src !== embedUrl) {
+            iframe.src = embedUrl;
+          }
+          $('btn-open-gmap-full').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(exactCoords);
+          if (p) {
+            statusBar.textContent =
+              '선별된 장소 핀 표시 중: ' + p.name + ' (' + p.categoryLabel + ') · 전체 핀 위치는 "수거 장소 핀 레이더"에서 확인하세요.';
+          } else {
+            statusBar.textContent = '기준 위치 좌표만 표시 중입니다 (식당 등 비관련 장소는 제외됩니다).';
+          }
+        }
+
+        function setActiveLocation(lat, lng, label, isGps, extra) {
+          var meta = extra || {};
+          state.location = {
+            lat: lat,
+            lng: lng,
+            label: label,
+            areaName: meta.areaName || '',
+            countryCode: meta.countryCode || '',
+            isGps: isGps
+          };
+          state.mapZoom = 1;
+          $('map-location-label').textContent = '기준 위치: ' + label;
+          $('map-empty-start').classList.add('hidden');
+          $('map-active-view').classList.remove('hidden');
+          updateGoogleSearchTopLink();
+          updateGoogleMapEmbed();
+          loadNearbyPlaces();
+        }
+
+        function requestIpLocationFromButton() {
+          showMapError('');
+          if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') {
+            showMapError('로컬 파일에서는 네트워크 위치 조회가 지원되지 않습니다. 아래 지역명을 직접 입력해 검색해 주세요.');
+            return;
+          }
+          var btn = $('btn-ip-location');
+          btn.disabled = true;
+          btn.textContent = '네트워크 위치 확인 중...';
+          fetch('/api/places/ip-location')
+            .then(function (r) {
+              return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+            })
+            .then(function (res) {
+              btn.disabled = false;
+              btn.textContent = '네트워크 위치로 바로 찾기';
+              if (!res.ok || !res.data || typeof res.data.lat !== 'number') {
+                showMapError((res.data && res.data.error) || '네트워크 위치를 확인하지 못했습니다. 지역명을 직접 입력해 주세요.');
+                return;
+              }
+              if (res.data.outsideKorea) {
+                showMapError('현재 네트워크 IP가 해외(' + res.data.label + ')로 감지되었습니다. 한국 지역 검색은 아래 지역명을 입력해 주세요.');
+              }
+              setActiveLocation(res.data.lat, res.data.lng, res.data.label, false, {
+                countryCode: res.data.countryCode ? String(res.data.countryCode).toLowerCase() : ''
+              });
+            })
+            .catch(function () {
+              btn.disabled = false;
+              btn.textContent = '네트워크 위치로 바로 찾기';
+              showMapError('네트워크 위치 조회 중 오류가 발생했습니다. 지역명을 직접 입력해 주세요.');
+            });
+        }
+
+        function searchRegionByName(query) {
+          var q = String(query || '').trim();
+          if (!q) return;
+          showMapError('');
+          $('input-region-top').value = q;
+          $('input-region-center').value = q;
+
+          var isHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+          var reqPromise = isHttp
+            ? fetch('/api/places/geocode?q=' + encodeURIComponent(q))
+                .then(function (r) { if (!r.ok) throw new Error('GEOCODE_FAIL'); return r.json(); })
+                .then(function (d) {
+                  return (d.results || []).map(function (it) {
+                    return {
+                      lat: it.lat,
+                      lon: it.lng,
+                      display_name: it.displayName,
+                      areaName: it.areaName || q,
+                      countryCode: it.countryCode || ''
+                    };
+                  });
+                })
+            : fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&accept-language=ko&limit=5&q=' + encodeURIComponent(q))
+                .then(function (r) { if (!r.ok) throw new Error('GEOCODE_FAIL'); return r.json(); });
+
+          reqPromise
+            .then(function (items) {
+              if (!Array.isArray(items) || items.length === 0) {
+                showMapError("'" + q + "'에 해당하는 지역을 찾지 못했습니다. 시/구/동 또는 역 이름으로 다시 입력해 주세요.");
+                return;
+              }
+              if (items.length === 1) {
+                $('map-geocode-choices').classList.add('hidden');
+                setActiveLocation(Number(items[0].lat), Number(items[0].lon), items[0].display_name, false, {
+                  areaName: items[0].areaName || q,
+                  countryCode: items[0].countryCode || ''
+                });
+              } else {
+                var box = $('map-geocode-choices');
+                box.classList.remove('hidden');
+                box.innerHTML = items
+                  .map(function (it, idx) {
+                    return (
+                      '<button type="button" class="btn-outline" data-geo-idx="' + idx + '" style="max-width:100%;overflow:hidden;text-overflow:ellipsis;">' +
+                      escapeHtml(it.display_name) +
+                      '</button>'
+                    );
+                  })
+                  .join('');
+                box.querySelectorAll('[data-geo-idx]').forEach(function (btn) {
+                  btn.addEventListener('click', function () {
+                    var chosen = items[Number(btn.getAttribute('data-geo-idx'))];
+                    box.classList.add('hidden');
+                    setActiveLocation(Number(chosen.lat), Number(chosen.lon), chosen.display_name, false, {
+                      areaName: chosen.areaName || q,
+                      countryCode: chosen.countryCode || ''
+                    });
+                  });
+                });
+              }
+            })
+            .catch(function () {
+              showMapError('지역 검색 중 네트워크 오류가 발생했습니다. 아래 구글 지도 직접 검색 버튼을 이용해 주세요.');
+            });
+        }
+
+        function loadNearbyPlaces() {
+          if (!state.location) return;
+          var lat = state.location.lat;
+          var lng = state.location.lng;
+
+          var statusBox = $('places-status-box');
+          statusBox.classList.remove('hidden');
+          statusBox.textContent = '주변 실제 수거함과 반환 매장을 조회하고 있습니다...';
+          $('places-list').innerHTML = '';
+          $('places-count').textContent = '0';
+
+          var isHttp = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+          if (isHttp) {
+            fetch('/api/places/nearby?lat=' + encodeURIComponent(lat) + '&lng=' + encodeURIComponent(lng) + '&filter=' + encodeURIComponent(state.mapFilter))
+              .then(function (r) { if (!r.ok) throw new Error('API_ERR'); return r.json(); })
+              .then(function (data) {
+                if (data && data.areaName && state.location && !state.location.areaName) {
+                  state.location.areaName = data.areaName;
+                }
+                if (data && data.countryCode && state.location && !state.location.countryCode) {
+                  state.location.countryCode = data.countryCode;
+                }
+                var list = (data && Array.isArray(data.places)) ? data.places : [];
+                state.places = list.map(function (p) {
+                  return {
+                    id: p.id,
+                    name: p.name,
+                    isDeposit: p.category === 'deposit_bottle',
+                    categoryLabel: p.categoryLabel,
+                    lat: p.lat,
+                    lng: p.lng,
+                    distanceMeters: p.distanceMeters,
+                    address: p.address || '주소 정보 미등록',
+                    openingHours: p.openingHours || '운영시간 미확인 (방문 전 확인 권장)',
+                    materials: Array.isArray(p.acceptedMaterials) ? p.acceptedMaterials.join(', ') : '재활용품',
+                    rewardNote: p.rewardEligibleNote || ''
+                  };
+                });
+                state.selectedPlace = state.places.length > 0 ? state.places[0] : null;
+                updateGoogleSearchTopLink();
+                renderPlacesAndMap();
+              })
+              .catch(function () {
+                statusBox.classList.remove('hidden');
+                statusBox.innerHTML =
+                  '<p style="margin:0;font-weight:700;">주변 수거 장소를 불러오지 못했습니다</p>' +
+                  '<p style="margin:6px 0 0;font-size:13px;color:var(--ink-muted);">네트워크 상태를 확인하거나 상단 "구글 지도에서 주변 검색"을 이용해 주세요.</p>';
+              });
+            return;
+          }
+
+          var radius = 1800;
+          var latDelta = radius / 111320;
+          var lngDelta = radius / (111320 * Math.max(Math.cos((lat * Math.PI) / 180), 0.2));
+          var viewbox = [
+            (lng - lngDelta).toFixed(5),
+            (lat + latDelta).toFixed(5),
+            (lng + lngDelta).toFixed(5),
+            (lat - latDelta).toFixed(5)
+          ].join(',');
+
+          var tagQueries = ['[amenity=recycling]', '[shop=supermarket]', '[amenity=community_centre]'];
+          if (state.mapFilter === 'deposit_bottle') {
+            tagQueries = ['[shop=supermarket]', '[shop=convenience]'];
+          } else if (state.mapFilter === 'can_pet' || state.mapFilter === 'recycling_center') {
+            tagQueries = ['[amenity=recycling]', '[amenity=community_centre]'];
+          }
+
+          var chunks = [];
+          function fetchNextTag(idx) {
+            if (idx >= tagQueries.length) return Promise.resolve(chunks);
+            var url =
+              'https://nominatim.openstreetmap.org/search?format=jsonv2&accept-language=ko&addressdetails=1&extratags=1&limit=15&bounded=1&viewbox=' +
+              encodeURIComponent(viewbox) +
+              '&q=' +
+              encodeURIComponent(tagQueries[idx]);
+            return fetch(url)
+              .then(function (r) { return r.ok ? r.json() : []; })
+              .catch(function () { return []; })
+              .then(function (rows) {
+                chunks.push(rows);
+                if (idx + 1 >= tagQueries.length) return chunks;
+                return new Promise(function (resolve) {
+                  setTimeout(function () {
+                    resolve(fetchNextTag(idx + 1));
+                  }, 280);
+                });
+              });
+          }
+
+          fetchNextTag(0)
+            .then(function () {
+              var rawAll = [].concat.apply([], chunks);
+              var seen = {};
+              var parsed = [];
+              var excludedPlaceRe = /부동산|공인중개|카센터|카오디오|자동차|타이어|정비|세차|안경|의류|패션|옷|구두|신발|댄스|스포츠|헬스|요가|필라테스|애견|펫|동물|병원|의원|치과|한의원|약국|문구|팬시|아트박스|다이소|올리브영|화장품|미용|헤어|네일|식당|음식점|한식|중식|일식|양식|분식|김밥|치킨|피자|족발|보쌈|갈비|국밥|찌개|라멘|초밥|스시|횟집|카페|커피|베이커리|빵집|디저트|주점|호프|포차|술집|노래방|pc방|모텔|호텔|세탁|클리닝|철물|공구|전자|컴퓨터|휴대폰|통신|꽃집|화원|가구|인테리어|침구|서점|학원|국기원|태권도|체육관|박물관|미술관|교회|성당|사찰|성형|피부과|농산물|청과|야채|채소|과일|정육|축산|수산|반찬|떡집|건어물/i;
+              var validCivicRe = /주민센터|행정복지센터|동사무소|구청|시청|면사무소|읍사무소|복지관|자원순환|재활용|환경/i;
+              var majorConvRe = /GS25|CU|세븐일레븐|7-?eleven|이마트24|emart24|미니스톱|ministop|씨스페이스/i;
+
+              rawAll.forEach(function (item) {
+                var key = item.osm_type + '-' + item.osm_id;
+                if (seen[key]) return;
+                seen[key] = true;
+                var pLat = Number(item.lat);
+                var pLng = Number(item.lon);
+                if (!isFinite(pLat) || !isFinite(pLng)) return;
+                var rawName = (item.name || '').trim();
+                var brandName = (item.extratags && item.extratags.brand ? item.extratags.brand : '').trim();
+                var combined = (rawName + ' ' + brandName).trim();
+
+                if (item.category === 'amenity' && ['restaurant', 'cafe', 'fast_food', 'bar', 'pub', 'food_court'].indexOf(item.type) !== -1) {
+                  return;
+                }
+
+                var isDeposit = item.category === 'shop' && (item.type === 'supermarket' || item.type === 'convenience');
+                var isCenter =
+                  item.category === 'amenity' &&
+                  (item.type === 'community_centre' ||
+                    (item.extratags && item.extratags.recycling_type === 'centre'));
+
+                if (isDeposit) {
+                  if (!rawName || excludedPlaceRe.test(combined)) return;
+                  if (item.type === 'convenience' && !majorConvRe.test(combined)) return;
+                } else if (item.category === 'amenity' && item.type === 'community_centre') {
+                  if (!rawName || excludedPlaceRe.test(rawName) || !validCivicRe.test(rawName)) return;
+                } else if (!(item.category === 'amenity' && (item.type === 'recycling' || item.type === 'waste_transfer_station'))) {
+                  return;
+                }
+
+                if (state.mapFilter === 'deposit_bottle' && !isDeposit) return;
+                if ((state.mapFilter === 'can_pet' || state.mapFilter === 'recycling_center') && isDeposit) return;
+
+                var addrObj = item.address || {};
+                var addrStr = [
+                  addrObj.city || addrObj.province,
+                  addrObj.borough || addrObj.county || addrObj.district,
+                  addrObj.suburb || addrObj.quarter || addrObj.neighbourhood,
+                  addrObj.road,
+                  addrObj.house_number
+                ]
+                  .filter(Boolean)
+                  .join(' ');
+
+                var catLabel = isDeposit
+                  ? item.type === 'supermarket'
+                    ? '마트·슈퍼 (공병 반환 확인)'
+                    : '편의점 (공병 반환 확인)'
+                  : isCenter
+                  ? '재활용 센터 / 주민센터'
+                  : '재활용 수거함';
+
+                parsed.push({
+                  id: key,
+                  name: rawName || (isDeposit ? '주변 소매점' : isCenter ? '지역 수거 거점' : '재활용 수거함'),
+                  isDeposit: isDeposit,
+                  categoryLabel: catLabel,
+                  lat: pLat,
+                  lng: pLng,
+                  distanceMeters: haversineMeters(lat, lng, pLat, pLng),
+                  address: addrStr || item.display_name || '주소 정보 미등록',
+                  openingHours: item.extratags && item.extratags.opening_hours ? item.extratags.opening_hours : '운영시간 미확인 (방문 전 확인 권장)',
+                  materials: isDeposit ? '빈용기보증금 유리병 (취급 여부 매장 확인)' : '재활용품 (현장 수거함 표기 기준)',
+                  rewardNote: isDeposit
+                    ? '빈용기보증금 반환 대상 소매점이나 매장 규모에 따라 취급 여부·1일 수량 제한이 다를 수 있습니다.'
+                    : '일반 분리수거 장소입니다. 현금 보증금 반환 여부는 확인되지 않았습니다.'
+                });
+              });
+
+              parsed.sort(function (a, b) {
+                return a.distanceMeters - b.distanceMeters;
+              });
+              state.places = parsed.slice(0, 30);
+              state.selectedPlace = state.places.length > 0 ? state.places[0] : null;
+              renderPlacesAndMap();
+            })
+            .catch(function () {
+              statusBox.classList.remove('hidden');
+              statusBox.innerHTML =
+                '<p style="margin:0;font-weight:700;">주변 수거 장소를 불러오지 못했습니다</p>' +
+                '<p style="margin:6px 0 0;font-size:13px;color:var(--ink-muted);">네트워크 상태를 확인하거나 상단 "구글 지도에서 주변 검색"을 이용해 주세요.</p>';
+            });
+        }
+
+        function buildGoogleDirectionsUrl(place) {
+          var url = 'https://www.google.com/maps/dir/?api=1';
+          if (state.location) {
+            url += '&origin=' + state.location.lat + ',' + state.location.lng;
+          }
+          url += '&destination=' + place.lat + ',' + place.lng + '&travelmode=walking';
+          return url;
+        }
+
+        function renderSelectedPlacePanel() {
+          var p = state.selectedPlace;
+          if (!p) {
+            $('sel-place-cat').textContent = '확인된 장소 없음';
+            $('sel-place-dist').textContent = '';
+            $('sel-place-name').textContent = '장소를 선택해 주세요';
+            $('sel-place-addr').textContent = '-';
+            $('sel-place-hours').textContent = '-';
+            $('sel-place-mat').textContent = '-';
+            $('sel-place-reward').textContent = '검색된 장소가 있으면 목록이나 지도 핀을 눌러 상세 정보와 구글 지도 길찾기를 확인할 수 있습니다.';
+            $('btn-sel-directions').classList.add('hidden');
+            return;
+          }
+          $('sel-place-cat').textContent = p.categoryLabel;
+          $('sel-place-dist').textContent = formatDistance(p.distanceMeters);
+          $('sel-place-name').textContent = p.name;
+          $('sel-place-addr').textContent = p.address;
+          $('sel-place-hours').textContent = p.openingHours;
+          $('sel-place-mat').textContent = p.materials;
+          $('sel-place-reward').textContent = p.rewardNote;
+          var dirBtn = $('btn-sel-directions');
+          dirBtn.href = buildGoogleDirectionsUrl(p);
+          dirBtn.classList.remove('hidden');
+        }
+
+        function renderInteractiveSvgMap() {
+          var svg = $('interactive-map-svg');
+          if (!state.location) {
+            svg.innerHTML = '';
+            return;
+          }
+          var cx = 320;
+          var cy = 190;
+          var maxRadiusMeters = 1800 / state.mapZoom;
+          var pxPerMeter = 155 / maxRadiusMeters;
+          var latRad = (state.location.lat * Math.PI) / 180;
+
+          var parts = [];
+          parts.push('<rect x="0" y="0" width="640" height="380" fill="#EDF1EA" />');
+          for (var gx = 80; gx < 640; gx += 80) {
+            parts.push('<line x1="' + gx + '" y1="0" x2="' + gx + '" y2="380" stroke="#DCE2D7" stroke-width="1" />');
+          }
+          for (var gy = 76; gy < 380; gy += 76) {
+            parts.push('<line x1="0" y1="' + gy + '" x2="640" y2="' + gy + '" stroke="#DCE2D7" stroke-width="1" />');
+          }
+          [500, 1000, 1500].forEach(function (ringM) {
+            var rPx = ringM * pxPerMeter;
+            if (rPx > 28 && rPx < 290) {
+              parts.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + rPx.toFixed(1) + '" fill="none" stroke="#C9D4C5" stroke-dasharray="4 4" />');
+              parts.push('<text x="' + (cx + 4) + '" y="' + (cy - rPx + 12).toFixed(1) + '" font-size="10" fill="#536358">' + (ringM >= 1000 ? ringM / 1000 + 'km' : ringM + 'm') + '</text>');
+            }
+          });
+          parts.push('<text x="20" y="26" font-size="11" font-weight="700" fill="#536358">N ↑</text>');
+
+          state.places.forEach(function (place, idx) {
+            var dyMeters = (place.lat - state.location.lat) * 111320;
+            var dxMeters = (place.lng - state.location.lng) * 111320 * Math.cos(latRad);
+            var px = cx + dxMeters * pxPerMeter;
+            var py = cy - dyMeters * pxPerMeter;
+            if (px < 18 || px > 622 || py < 18 || py > 362) return;
+
+            var isSel = state.selectedPlace && state.selectedPlace.id === place.id;
+            var fill = place.isDeposit ? '#B45309' : '#1B6B48';
+            var radius = isSel ? 15 : 11;
+            var shortName = place.name.length > 9 ? place.name.slice(0, 9) + '…' : place.name;
+            parts.push(
+              '<g data-map-pin="' + idx + '" style="cursor:pointer;">' +
+              '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="' + radius + '" fill="' + fill + '" stroke="' + (isSel ? '#18261E' : '#FFFFFF') + '" stroke-width="' + (isSel ? 3 : 2) + '" />' +
+              '<text x="' + px.toFixed(1) + '" y="' + (py + 4).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">' + (place.isDeposit ? '병' : '재') + '</text>' +
+              (isSel || idx < 6
+                ? '<text x="' + px.toFixed(1) + '" y="' + (py + radius + 12).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#18261E" stroke="#FFFFFF" stroke-width="2.5" paint-order="stroke">' + escapeHtml(shortName) + '</text>'
+                : '') +
+              '</g>'
+            );
+          });
+
+          parts.push('<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="#1D4ED8" stroke="#FFFFFF" stroke-width="3" />');
+
+          svg.innerHTML = parts.join('');
+          svg.querySelectorAll('[data-map-pin]').forEach(function (pin) {
+            pin.addEventListener('click', function () {
+              var idx = Number(pin.getAttribute('data-map-pin'));
+              if (state.places[idx]) {
+                state.selectedPlace = state.places[idx];
+                renderPlacesAndMap();
+              }
+            });
+          });
+        }
+
+        function renderPlacesAndMap() {
+          $('places-count').textContent = String(state.places.length);
+          var statusBox = $('places-status-box');
+          var list = $('places-list');
+
+          if (state.places.length === 0) {
+            statusBox.classList.remove('hidden');
+            statusBox.innerHTML =
+              '<p style="margin:0;font-weight:700;">주변 반경 내에서 확인된 수거 장소가 없습니다</p>' +
+              '<p style="margin:6px 0 0;font-size:13px;color:var(--ink-muted);">필터를 전체로 변경하거나 상단 "구글 지도에서 주변 검색"을 이용해 보세요.</p>';
+            list.innerHTML = '';
+          } else {
+            statusBox.classList.add('hidden');
+            list.innerHTML = state.places
+              .map(function (p, idx) {
+                var isSel = state.selectedPlace && state.selectedPlace.id === p.id;
+                return (
+                  '<article class="place-card' + (isSel ? ' selected' : '') + '">' +
+                  '<div>' +
+                  '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink-muted);">' +
+                  '<span>' + escapeHtml(p.categoryLabel) + '</span>' +
+                  '<span class="mono-num" style="font-weight:700;color:var(--accent);">' + formatDistance(p.distanceMeters) + '</span>' +
+                  '</div>' +
+                  '<h3 style="margin:6px 0 0;font-size:16px;font-weight:700;">' + escapeHtml(p.name) + '</h3>' +
+                  '<p style="margin:4px 0 0;font-size:12px;color:var(--ink-muted);">' + escapeHtml(p.address) + '</p>' +
+                  '<p style="margin:6px 0 0;font-size:12px;color:var(--ink-muted);">' + escapeHtml(p.openingHours) + '</p>' +
+                  '</div>' +
+                  '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--surface-muted);display:flex;gap:8px;">' +
+                  '<button type="button" class="btn-outline" style="flex:1;min-height:40px;" data-pick-place="' + idx + '">구글 지도로 보기</button>' +
+                  '<a href="' + escapeHtml(buildGoogleDirectionsUrl(p)) + '" target="_blank" rel="noopener noreferrer" class="btn-primary" style="flex:1;min-height:40px;padding:8px 10px;font-size:12px;">구글 지도 길찾기</a>' +
+                  '</div>' +
+                  '</article>'
+                );
+              })
+              .join('');
+
+            list.querySelectorAll('[data-pick-place]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var idx = Number(btn.getAttribute('data-pick-place'));
+                if (state.places[idx]) {
+                  state.selectedPlace = state.places[idx];
+                  setMapViewMode('google');
+                  renderPlacesAndMap();
+                }
+              });
+            });
+          }
+
+          renderSelectedPlacePanel();
+          renderInteractiveSvgMap();
+          updateGoogleMapEmbed();
+        }
+
+        $('btn-gps-top').addEventListener('click', requestGpsFromUserButton);
+        $('btn-gps-center').addEventListener('click', requestGpsFromUserButton);
+        $('btn-ip-location').addEventListener('click', requestIpLocationFromButton);
+        $('btn-view-google-map').addEventListener('click', function () { setMapViewMode('google'); });
+        $('btn-view-radar-map').addEventListener('click', function () { setMapViewMode('radar'); });
+
+        $('form-region-top').addEventListener('submit', function (e) {
+          e.preventDefault();
+          searchRegionByName($('input-region-top').value);
+        });
+        $('form-region-center').addEventListener('submit', function (e) {
+          e.preventDefault();
+          searchRegionByName($('input-region-center').value);
+        });
+
+        document.querySelectorAll('.preset-region').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            searchRegionByName(btn.getAttribute('data-region'));
+          });
+        });
+
+        document.querySelectorAll('#map-filter-tabs [data-map-filter]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            state.mapFilter = btn.getAttribute('data-map-filter');
+            syncMapFilterTabs();
+            if (state.location) loadNearbyPlaces();
+          });
+        });
+
+        $('btn-map-zoom-in').addEventListener('click', function () {
+          state.mapZoom = Math.min(2.6, Number((state.mapZoom + 0.4).toFixed(1)));
+          renderInteractiveSvgMap();
+        });
+        $('btn-map-zoom-out').addEventListener('click', function () {
+          state.mapZoom = Math.max(0.6, Number((state.mapZoom - 0.3).toFixed(1)));
+          renderInteractiveSvgMap();
+        });
+
+        // ---------- Rewards Calculator ----------
+        function renderDepositCalc() {
+          var total = 0;
+          DEPOSIT_TIERS.forEach(function (t) {
+            total += (state.depositQty[t.id] || 0) * t.won;
+          });
+          $('deposit-total-won').textContent = total.toLocaleString('ko-KR') + '원';
+
+          $('deposit-calc-grid').innerHTML = DEPOSIT_TIERS.map(function (t) {
+            var q = state.depositQty[t.id] || 0;
+            return (
+              '<div class="tier-row">' +
+              '<div><strong style="font-size:14px;display:block;">' + escapeHtml(t.label) + '</strong>' +
+              '<span class="mono-num" style="font-size:13px;font-weight:700;color:var(--accent);">1병 ' + t.won + '원</span></div>' +
+              '<div class="qty-ctrl">' +
+              '<button type="button" class="qty-btn" data-tier-dec="' + t.id + '" aria-label="수량 감소">-</button>' +
+              '<span class="mono-num" style="min-width:28px;text-align:center;font-weight:700;">' + q + '</span>' +
+              '<button type="button" class="qty-btn" data-tier-inc="' + t.id + '" aria-label="수량 증가">+</button>' +
+              '</div></div>'
+            );
+          }).join('');
+
+          $('deposit-calc-grid').querySelectorAll('[data-tier-dec]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              var id = b.getAttribute('data-tier-dec');
+              state.depositQty[id] = Math.max(0, (state.depositQty[id] || 0) - 1);
+              renderDepositCalc();
+            });
+          });
+          $('deposit-calc-grid').querySelectorAll('[data-tier-inc]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              var id = b.getAttribute('data-tier-inc');
+              state.depositQty[id] = (state.depositQty[id] || 0) + 1;
+              renderDepositCalc();
+            });
+          });
+        }
+
+        $('btn-rewards-find-map').addEventListener('click', function () {
+          state.mapFilter = 'deposit_bottle';
+          syncMapFilterTabs();
+          switchTab('map');
+        });
+
+        // ---------- Disposal Guide Encyclopedia ----------
+        function renderGuideScreen() {
+          $('guide-category-tabs').innerHTML = MANUAL_CAT_KEYS.map(function (key) {
+            var g = WASTE_GUIDES[key];
+            return (
+              '<button type="button" class="seg-btn' + (state.guideCategory === key ? ' active' : '') + '" data-guide-cat="' + key + '">' +
+              escapeHtml(g.label) +
+              '</button>'
+            );
+          }).join('');
+
+          $('guide-category-tabs').querySelectorAll('[data-guide-cat]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              state.guideCategory = btn.getAttribute('data-guide-cat');
+              renderGuideScreen();
+            });
+          });
+
+          var guide = WASTE_GUIDES[state.guideCategory] || WASTE_GUIDES.transparent_pet;
+          $('guide-kicker').innerHTML = '<span>대표 품목</span><span aria-hidden="true">·</span><span>' + escapeHtml(guide.examples) + '</span>';
+          $('guide-title').textContent = guide.label + ' 배출 기준';
+          $('guide-summary').textContent = guide.rewardSummary;
+          $('guide-steps').innerHTML = guide.steps
+            .map(function (st, idx) {
+              return (
+                '<li class="step-item">' +
+                '<span class="step-num">' + (idx + 1) + '</span>' +
+                '<div><strong style="display:block;font-size:14px;">' + escapeHtml(st.title) + '</strong>' +
+                '<p style="margin:4px 0 0;font-size:13px;color:var(--ink-muted);">' + escapeHtml(st.detail) + '</p></div>' +
+                '</li>'
+              );
+            })
+            .join('');
+          $('guide-local-note').innerHTML = '<div><strong>지자체 유의사항:</strong> ' + escapeHtml(guide.localNote) + '</div>';
+        }
+
+        // ---------- Initial Render & URL Tab Sync ----------
+        renderHistory();
+        renderDepositCalc();
+        renderGuideScreen();
+
+        try {
+          var initTab = new URLSearchParams(window.location.search).get('tab');
+          if (initTab && ['home', 'camera', 'map', 'rewards', 'guide'].indexOf(initTab) !== -1) {
+            switchTab(initTab);
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </body>
+</html>
